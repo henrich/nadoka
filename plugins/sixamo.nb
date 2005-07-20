@@ -1,0 +1,75 @@
+#-*-ruby-*-
+#
+# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+#
+# This program is free software with ABSOLUTELY NO WARRANTY.
+# You can re-distribute and/or modify this program under
+# the same terms of the Ruby's lisence.
+#
+#
+# Sixamo bot
+#
+# add config like this:
+#
+# BotConfig = {
+#   :SixamoBot => {
+#     :dir => 'dokoka',
+#     :ch  => /nadoka/,
+#     :tm  => 5
+#     :id  => /(sixamo)|(ししゃも)/
+#   }
+# }
+#
+#
+# $Id: sixamo.nb 91 2004-08-13 01:13:47Z ko1 $
+#
+
+require 'sixamo'
+require 'kconv'
+class SixamoBot < Nadoka::NDK_Bot
+  def bot_initialize
+    @sixamo_dir = @bot_config[:dir] || '~/sixamo'
+    @sixamo_ch  = @bot_config[:ch]  || '#nadoka'
+    @sixamo_tm  = @bot_config[:tm]  || 10
+    @sixamo_id  = @bot_config[:id]  || /(sixamo)|(ししゃも)/
+    @sixamo_rt  = @bot_config[:rt]  || [10, 5, 4, 4, 3, 2]
+    @prev = Time.now
+    make_sixamo
+  end
+
+  def make_sixamo
+    @sixamo = Sixamo.new(File.expand_path(@sixamo_dir))
+  end
+  
+  def on_privmsg prefix, ch, msg
+    return unless @sixamo_ch === ch
+    
+    begin
+      msg = Kconv.toeuc(msg)
+      @sixamo.memorize msg
+
+      unless @sixamo_id === msg
+        rnd = case Time.now - @prev
+        when  0..10; @sixamo_rt[0]
+        when 10..20; @sixamo_rt[1]
+        when 20..30; @sixamo_rt[2]
+        when 30..60; @sixamo_rt[3]
+        when 60..120;@sixamo_rt[4]
+        else       ; @sixamo_rt[5]
+        end
+        
+        return if Kernel.rand(rnd) != 1
+      end
+      @prev = Time.now
+
+      talk = @sixamo.talk(msg)
+      @sixamo.memorize talk
+      
+      send_notice ch, 'sixamo: ' + talk.tojis
+    rescue
+      make_sixamo
+    end
+
+  end
+end
+
