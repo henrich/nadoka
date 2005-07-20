@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 #
 # Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
 #
