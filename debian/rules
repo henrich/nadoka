@@ -37,17 +37,19 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/nadoka.
+	install -m 0755 nadoka $(CURDIR)/debian/nadoka/usr/bin/nadoka
 	cp -a *.rb plugins rice $(CURDIR)/debian/nadoka/usr/share/nadoka
+	find $(CURDIR)/debian/nadoka/usr/share/nadoka -name '*.[nr]b' | xargs chmod ugo-x
 
 
 # Build architecture-independent files here.
 binary-indep: build install
 	dh_testdir -i
 	dh_testroot -i
-	dh_installchangelogs  -iChangeLog
+	dh_installchangelogs -i ChangeLog
 	dh_installdocs -i
 	dh_installexamples -i
-	dh_installman -i
+	dh_installman -i debian/nadoka.1
 	dh_link -i
 	dh_compress -i
 	dh_fixperms -i

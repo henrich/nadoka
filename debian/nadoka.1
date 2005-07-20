@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH #UCPACKAGE# SECTION "#SHORTDATE#"
+.TH nadoka "1" "Jul 2005"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -16,29 +16,32 @@
 .\" .sp <n>    insert n+1 empty lines
 .\" for manpage-specific macros, see man(7)
 .SH NAME
-#PACKAGE# \- program to do something
+nadoka \- IRC Client Server program
 .SH SYNOPSIS
-.B #PACKAGE#
-.RI [ options ] " files" ...
-.br
-.B bar
-.RI [ options ] " files" ...
+.B nadoka
+.R --rc
+.I rcfile
+.RI [ options ]
 .SH DESCRIPTION
 This manual page documents briefly the
-.B #PACKAGE#
-and
-.B bar
+.B nadoka
 commands.
 .PP
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
 .\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
 .\" respectively.
-\fB#PACKAGE#\fP is a program that...
+\fBnadoka\fP is an IRC proxy program.  It always keeps to connect to IRC
+server.
+.PP
+You can create bot program using nadoka easily.
+
 .SH OPTIONS
 These programs follow the usual GNU command line syntax, with long
 options starting with two dashes (`-').
 A summary of options is included below.
-For a complete description, see the Info files.
+.TP
+.B \-r, \-\-rc rcfile
+Specify rc(config) file
 .TP
 .B \-h, \-\-help
 Show summary of options.
@@ -46,14 +49,11 @@ Show summary of options.
 .B \-v, \-\-version
 Show version of program.
 .SH SEE ALSO
-.BR bar (1),
-.BR baz (1).
+nadoka has detailed document at following URL:
 .br
-The programs are documented fully by
-.IR "The Rise and Fall of a Fooish Bar" ,
-available via the Info system.
+.I http://www.atdot.net/nadoka/
 .SH AUTHOR
-#PACKAGE# was written by <upstream author>.
+nadoka was written by SASADA Koichi <ko1@atdot.net>.
 .PP
-This manual page was written by #USERNAME# <#EMAIL#>,
+This manual page was written by Taku YASUI <tach@debian.or.jp>,
 for the Debian project (but may be used by others).

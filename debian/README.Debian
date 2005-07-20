@@ -1,6 +1,18 @@
-nadoka for Debian
------------------
+How to use nadoka on Debian systems
+-----------------------------------
 
-<possible notes regarding this package - if none, delete this file>
+ 1. copy example rc file to appropriate directory.
+
+    % cp /usr/share/doc/nadoka/examples/nadokarc /home/myname/nadoka/
+ 
+ 2. make log directory and edit this rc file
+
+    % mkdir /home/myname/nadoka/log
+    % sensible-editor /home/myname/nadoka/nadokarc
+ 
+ 3. chdir to directory and run nadoka with your rc file
+
+    % cd /home/myname/nadoka
+    % nadoka --rc nadokarc
 
  -- Taku YASUI <tach@debian.or.jp>, Thu, 21 Jul 2005 00:35:11 +0900
