@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /usr/bin/ruby1.8 -I/usr/share/nadoka /usr/share/nadoka.rb $@
+exec /usr/bin/ruby1.8 -I/usr/share/nadoka /usr/share/nadoka/nadoka.rb $@
