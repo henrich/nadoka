@@ -1,0 +1,17 @@
+Source: nadoka
+Section: net
+Priority: optional
+Maintainer: Taku YASUI <tach@debian.or.jp>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.6.1
+
+Package: nadoka
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: IRC Client Server Program
+ Nadoka is IRC Client Server program. It's same concept as madoka.
+ .
+ You can do with this software:
+ .
+   * connect to IRC usually
+   * easy to make a bot
