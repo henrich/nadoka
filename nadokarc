@@ -135,7 +135,7 @@ Backlog_Lines = 20
 # Directory
 Log_dir     = './log'
 
-Plugins_dir = './plugins'
+Plugins_dir = '/usr/share/nadoka/plugins'
 # You can set Plugins_dir as Enumerable object.
 # ex: ['./dir1', './dir2', ...]
 
