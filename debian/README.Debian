@@ -3,7 +3,8 @@ How to use nadoka on Debian systems
 
  1. copy example rc file to appropriate directory.
 
-    % cp /usr/share/doc/nadoka/examples/nadokarc /home/myname/nadoka/
+    % zcat /usr/share/doc/nadoka/examples/nadokarc.gz > \
+      /home/myname/nadoka/nadokarc
  
  2. make log directory and edit this rc file
 
