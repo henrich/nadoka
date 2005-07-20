@@ -1,0 +1,199 @@
+# -*-ruby-*-
+#
+# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+#
+# This program is free software with ABSOLUTELY NO WARRANTY.
+# You can re-distribute and/or modify this program under
+# the same terms of the Ruby's lisence.
+#
+#
+# $Id: weba.nb 92 2004-08-13 01:50:18Z ko1 $
+#
+
+=begin
+
+== Abstract
+
+WebA: Web Accessor
+  http interface for irc
+
+  You can access IRC via ((<http://host:port/weba>))
+  (by default).
+
+
+== Configuration
+
+BotConfig = {
+  :Weba => {
+    :passwd  => 'password', # or nil(no authentication, and nil is default)
+                            # If passwd is specified, use Basic Access Authentication
+    :id   => 'weba',        # Basic Authentication ID (default: 'weba')
+    :port => 12345 ,        # httpd port(default: 12345)
+    :entry=> 'weba',        # irc entry(default: 'weba')
+                            # weba access to http://host:#{port}/#{entry}
+    :max_store => 1000,     # store message size(default: 1000)
+  },
+}
+
+=end
+
+require 'webrick'
+require 'tagparts'
+
+class WebA < Nadoka::NDK_Bot
+  class WebAlet < WEBrick::HTTPServlet::AbstractServlet
+    def initialize server, bot, authorizer
+      super
+      @bot  = bot
+      @auth = authorizer
+    end
+    
+    def do_GET req, res
+      @auth.authenticate(req, res) if @auth
+      begin
+        res.body = @bot.htmlpage(req.query).to_s
+        res['content-type'] = 'text/html; charset=Shift_JIS'
+      rescue WebARedirect => e
+        res.set_redirect(WEBrick::HTTPStatus::Found, "#{req.path}?ch=#{URI.encode(e.ch.tosjis)}")
+        res.body = 'moved'
+      end
+    end
+  end
+
+  class WebARedirect < Exception
+    attr_reader :ch
+    def initialize ch
+      @ch = ch
+    end
+  end
+  
+  include HTMLParts
+  def htmlpage query
+    ch = (query['ch'] || '').tojis
+    ch = !ch.empty? && (@state.channels.include?(ch) || ch == 'all') && ch
+    
+    ttl = ch ? " - #{ch.tosjis}" : ''
+    
+    if ch && (msg = query['message']) && !msg.empty?
+      msg = msg.tojis + ' (from WebA)'
+      send_privmsg(ch, msg)
+      push_message(ch, @state.nick, msg, :privmsg)
+      raise WebARedirect.new(ch)
+    end
+    
+    _html(
+      _head(_title("WebA: IRC Web Accessor#{ttl}")),
+      _body(
+        _h1("WebA#{ttl}"),
+        _p(
+          _a({:href => "./#{@entry}?ch="+URI.encode((ch || '').tosjis)}, 'reload'),
+          _a({:href => "./#{@entry}"}, 'top')
+        ),
+        view_ch(ch),
+        select_ch(ch)
+      ))
+  end
+
+  def select_ch ch
+    _p({:class => 'channel-list'},
+      (@state.channels.sort + ['all']).map{|e|
+        e = e.tosjis
+        [_a({:href => "./#{@entry}?ch="+ URI.encode(e)}, e), ' ']
+      }
+    )
+  end
+
+  def view_ch ch
+    return unless ch
+    chs = ch.tosjis
+    msgs = (ch == 'all') ? @messages : @messages.find_all{|e| e[:ch] == chs}
+    
+    _div({:class => 'irc-accessor'},
+      if(ch != 'all')
+        _form({:method => 'get', :action => "./#{@entry}", :class => 'sayform'},
+          "msg: ",
+          _input({:type => 'text',   :name => 'message', :class => 'msgbox'}),
+          _input({:type => 'submit', :name => 'say', :value => 'say'}),
+          _input({:type => 'hidden', :name => 'ch', :value => ch})
+        )
+      end,
+      _h2("channel #{ch.tosjis}"),
+      _div({:class => 'messages'},
+        msgs.map{|m|
+          if ch == 'all'
+            chn = _a({:href => "./#{@entry}?ch=" + URI.encode(m[:ch])}, m[:ch])
+          else
+            chn = ''
+          end
+          
+          nick = (m[:type] == :privmsg) ? m[:nick] : "(#{m[:nick]})"
+          _div({:class=>'msg'},
+               "#{m[:time].strftime('%H:%M')} ", chn, "- #{nick}: #{m[:msg]}")
+        }.reverse
+      )
+    )
+  end
+  
+  def push_message ch, nick, msg, type
+    @messages << {:ch => ch.tosjis, :nick => nick, :msg => msg.tosjis,
+                  :type => type, :time => Time.now}
+    
+    if @messages.size > @max_store
+      @messages = @messages[(@messages.size - @max_store) .. -1]
+    end
+  end
+  
+  def bot_initialize
+    @max_store = @bot_config.fetch(:max_store, 1000)
+    @server = WEBrick::HTTPServer.new({
+      :Port => @bot_config.fetch(:port, 12345),
+    })
+    @entry = @bot_config.fetch(:entry, 'weba')
+    auth = nil
+    if passwd = @bot_config[:passwd]
+      userdb = Hash.new
+      userdb.extend(WEBrick::HTTPAuth::UserDB)
+      userdb.auth_type = WEBrick::HTTPAuth::BasicAuth
+      userdb.set_passwd("WebA Authentication", @bot_config.fetch(:id, 'weba'), passwd)
+
+      auth = WEBrick::HTTPAuth::BasicAuth.new({
+        :Realm        => "WebA Authentication",
+        :UserDB       => userdb,
+        :Algorithm    => 'MD5-sess',
+        :Qop          => [ 'auth' ],
+        :UseOpaque    => true,
+        :NonceExpirePeriod => 60,
+        :NonceExpireDelta  => 5,
+      })
+    end
+    
+    @server.mount("/#{@entry}", WebAlet, self, auth)
+    
+    
+    @server_thread = Thread.new{
+      begin
+        @server.start
+      rescue Exception => e
+        @manager.ndk_error e
+      end
+    }
+    @messages  = []
+  end
+
+  def bot_destruct
+    @server_thread.kill
+    @server.shutdown
+    sleep 1
+  end
+  
+  def on_privmsg prefix, ch, msg
+    ch = @config.canonical_channel_name(ch)
+    push_message(ch, prefix.nick, msg, :privmsg)
+  end
+
+  def on_notice prefix, ch, msg
+    ch = @config.canonical_channel_name(ch)
+    push_message(ch, prefix.nick, msg, :notice)
+  end
+end
+
