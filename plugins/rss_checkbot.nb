@@ -1,44 +1,44 @@
 # -*-ruby-*-
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's lisence.
 #
 #
-# $Id: rss_check.nb 51 2004-07-08 16:42:11Z ko1 $
+# $Id: rss_checkbot.nb 131 2005-05-26 12:24:45Z ko1 $
 #
 
 =begin
 configuration like follows:
 
-  BotConfig = {
-    :RSS_CheckBot => {
-      :rss_paths => [
-      'http://www.ruby-lang.org/ja/index.rdf',
-      'http://slashdot.jp/slashdotjp.rss',
-      'http://www3.asahi.com/rss/index.rdf',
-      'LIRS:http://rrr.jin.gr.jp/~znz/samidare/sites.lirs.gz',
-      ],
-      :cache     => "./rss-cache",
-      :ch        => '#nadoka',
-      :tm        => 30 # check interval time(minute)
-    }
-  }
-  
+BotConfig = [
+{
+  :name      => :RSS_CheckBot,
+  :rss_paths =>
+  [
+    'http://www.ruby-lang.org/ja/index.rdf',
+  ],
+  :cache     => "./rss-cache",
+  :ch        => '#nadoka_check',
+  :tm        => 30     # check interval time(minute)
+  :over_message => nil #
+}
+
 =end
 
-require 'rss_check'
+require 'lib/rss_check'
 require 'iconv'
 require 'kconv'
 
 class RSS_CheckBot < Nadoka::NDK_Bot
   def bot_initialize
-    @cache = File.expand_path(@bot_config[:cache] || '~/.rss_check')
-    @paths = @bot_config[:rss_paths] || ['http://www.ruby-lang.org/ja/index.rdf']
-    @ch    = @bot_config[:ch] || '#nadoka'
-    @tm    = @bot_config[:tm] || 30 # min
+    @cache = File.expand_path(@bot_config.fetch(:cache, '~/.rss_check'))
+    @paths = @bot_config.fetch(:rss_paths, ['http://www.ruby-lang.org/ja/index.rdf'])
+    @ch    = @bot_config.fetch(:ch, '#nadoka_check')
+    @tm    = @bot_config.fetch(:tm,30)              # min
+    @over  = @bot_config.fetch(:over_message, nil)
     @rssc  = RSS_Check.new(@paths, @cache, true)
     @ic    = Iconv.open("EUC-JP", "UTF-8")
     @prevtm= Time.now
@@ -46,12 +46,12 @@ class RSS_CheckBot < Nadoka::NDK_Bot
 
   def bot_state
     nt = Time.at(@prevtm.to_i + @tm * 60)
-    "<#{self.class}: next check at #{nt.asctime}>" 
+    "<#{self.class}: next check at #{nt.asctime}@#{@ch}>" 
   end
   
   def __on_privmsg prefix, ch, msg
-    if /^rss> status/ =~ msg && ch == @ch && prefix.nick == @state.nick
-      #
+    if /^rss> check/ =~ msg && ch == @ch && prefix.nick == @state.nick
+      make_notice Time.now
     end
   end
   
@@ -62,13 +62,23 @@ class RSS_CheckBot < Nadoka::NDK_Bot
   def check
     tm = Time.now
     if tm.to_i - @tm * 60 > @prevtm.to_i
-      @prevtm = tm
-      items = @rssc.check
-      @rssc.dump
-      make_notice_thread items
+      make_notice tm
     end
   end
 
+  def make_notice tm
+    @prevtm = tm
+    begin
+      items = @rssc.check
+      @rssc.save
+    rescue => e
+      send_notice(@ch, "rss bot error: #{e}")
+      @manager.ndk_error e
+      return
+    end
+    make_notice_thread items
+  end
+  
   def make_notice_thread items
     Thread.new{
       begin
@@ -96,11 +106,12 @@ class RSS_CheckBot < Nadoka::NDK_Bot
           end
         }
       rescue Exception => e
+        send_notice(@ch, "rss bot error: #{e}")
         @manager.ndk_error e
       end
+      send_notice(@ch, "rss bot: #{@over}") if @over
     }
   end
   
 end
-
 

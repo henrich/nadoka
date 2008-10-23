@@ -1,13 +1,13 @@
 # -*-ruby-*-
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's lisence.
 #
 #
-# $Id: timestampbot.nb 92 2004-08-13 01:50:18Z ko1 $
+# $Id: timestampbot.nb 130 2005-05-26 12:04:08Z ko1 $
 #
 
 =begin
@@ -18,15 +18,14 @@ Add time stamp to each log.
 
 
 == Configuration
-
-  BotConfig = {
-    :TimeStampBot => {
-      :interval    => 60 * 60,             # stamp interval time(sec)
-                                           # default: 60 * 60 (1 hour)
-      :stampformat => '%y/%m/%d-%H:%M:%S', # stamp format
-      # default: '== %y/%m/%d-%H:%M:%S =========================================='
-    },
-  }
+BotConfig = [
+{
+  :name        => :TimeStampBot,
+  :interval    => 60 * 60,       # sec
+  :stampformat => '== %y/%m/%d-%H:%M:%S ==========================================',
+  :client      => false,
+}
+]
 
 =end
 
@@ -35,6 +34,7 @@ class TimeStampBot < Nadoka::NDK_Bot
     @interval    = @bot_config.fetch(:interval, 60 * 60) # default: 1 hour
     @stampformat = @bot_config.fetch(:stampformat,
       '== %y/%m/%d-%H:%M:%S ==========================================')
+    @client      = @bot_config.fetch(:client, false)
     @nexttime    = nexttime
   end
 
@@ -55,7 +55,7 @@ class TimeStampBot < Nadoka::NDK_Bot
     @state.channels.each{|ch|
       @logger.clog(ch, msg, true)
     }
-    @logger.slog(msg, true)
+    @logger.slog(msg, true) if @client
   end
 end
 

@@ -1,6 +1,6 @@
 # -*-ruby-*-
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
@@ -21,23 +21,22 @@ Auto away if no action
 
 == Configuration
 
+BotConfig = [
+{
+  :name      => :AutoAwayBot,
+  :threshold => 15*60,        # sec
+  :message   => 'Away',
+}
+]
 
 =end
 
 class AutoAwayBot < Nadoka::NDK_Bot
   def bot_initialize
-    if @bot_config.include?(:threshold)
-      @threshold = @bot_config[:threshold].to_i
-    else
-      @threshold = 15*60
-    end
-    if @bot_config.include?(:message) && !@bot_config[:message].empty?
-      @message = @bot_config[:message]
-    else
-      @message = "Away"
-    end
-    @lastseen = Time.now
-    @in_away = false
+    @threshold = @bot_config.fetch(:threshold, 15*60).to_i
+    @message   = @bot_config.fetch(:message, 'Away')
+    @lastseen  = Time.now
+    @in_away   = false
   end
 
   def on_client_privmsg client, ch, msg

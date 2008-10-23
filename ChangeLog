@@ -1,6 +1,384 @@
-# ChangeLog of Nadoka($Rev: 113 $)
-# $Id: ChangeLog 113 2005-03-04 04:28:09Z ko1 $ 
-#
+# ChangeLog of Nadoka($Rev: 173 $)
+# $Id: ChangeLog 173 2006-10-02 12:45:38Z ko1 $ 
+
+2006-10-02(Mon) 21:41:24 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/weatherbot.nb : removed
+
+	* plugins/sendpingbot.nb : added
+
+	* ndk/client.rb : modified for pingbot
+
+	* ndk/server.rb : ditto
+
+
+2006-09-01(Fri) 02:04:15 +0900  Kazuhiro NISHIAYMA <zn@mbf.nifty.com>
+
+	* ndk/bot.rb : support send to a safe channel
+
+	* nadokarc : fix misalignment
+
+2006-08-31(Thu) 01:40:39 +0900  Kazuhiro NISHIAYMA <zn@mbf.nifty.com>
+
+	* ndk/bot.rb : fix typos
+
+2006-08-11(Fri) 14:45:01 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/gonzuibot.nb : add a comma
+
+	* plugins/pastebot.nb : add nick to paste page name
+
+	* plugins/googlebot.nb : fix show_char_code_and_erace_tag
+
+
+2006-05-16(Tue) 16:16:30 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/server.rb : handle TERM signal
+ 
+
+2006-03-27(Mon) 19:50:27 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/dictbot.nb : fix dict index
+
+	* plugins/roulettebot.nb : added
+
+	* rice/irc.rb : loosen nick regexp
+
+	* ndk/server.rb : randomize server if serching next server
+
+
+2005-09-30(Fri) 00:05:19 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/googlebot.nb : fix bugs
+
+	* plugins/dictbot.nb : support
+
+	* plugins/gonzuibot.nb : added
+
+	* ndk/config.rb : fix bugs
+
+
+2005-06-25(Sat) 19:02:24 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* nadoka.rb : output error information  to file
+	'nadoka_fatal_error' when unhandled error is occure (bug)
+
+
+2005-06-14(Tue) 21:26:07 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/server.rb : change reloaded message output method to slog
+
+
+2005-06-13(Mon) 18:25:33 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* nadokarc, ndk/logger.rb, ndk/config.rb : support
+	:channel_name_in_file_name option for logging
+
+
+2005-06-13(Mon) 00:11:39 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/server_state.rb : fix typo
+
+	* ndk/config.rb : see ENV['LANG'] to decide filename encoding
+
+	* ndk/version.rb : fix version format
+
+	* ndk/bot.rb : fix comment
+
+
+2005-06-10(Fri) 04:38:25 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/server.rb : fix logic operation
+
+
+2005-06-09(Thu) 17:22:25 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/logger.rb : synchronize IOLogWriter output
+
+
+2005-06-09(Thu) 17:18:21 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/config.rb : set default file encoding to EUC
+
+
+2005-06-09(Thu) 05:11:58 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/config.rb : fix to get FilenameEncoding
+
+	* ndk/server.rb : stop away message until server connection
+
+
+2005-06-08(Wed) 07:56:17 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/config.rb : clear if channel setting is not hash
+
+
+2005-06-08(Wed) 07:42:17 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/googlebot.nb : fix to use count default language
+
+
+2005-06-08(Wed) 06:21:25 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/server.rb : trap IOError and change error output
+
+	* ndk/config.rb : support {prefix:(nick|user|host)} specifier
+
+	* ndk/logger.rb : {user} -> {nick}
+
+	* nadokarc : apply above changes
+
+	* rice/irc.rb : output unless port is closed
+
+	* plugins/backlogbot.nb : change spell (@store -> @stores)
+
+
+2005-06-05(Sun) 22:47:15 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/server.rb : PONG MISS message dlog -> slog
+
+
+2005-05-31(Tue) 14:08:26 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* nadokarc : change log setting of "#nadoka_check"
+
+
+2005-05-29(Sun) 14:01:02 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/server.rb, ndk/server_state.rb, ndk/logger.rb :
+	NICK and QUIT logging from server_state
+
+	* nadokarc, ndk/config.rb : change default PART, QUIT message format
+
+
+2005-05-29(Sun) 12:53:48 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/weba.nb : set default password on
+
+	* ndk/logger.rb : fix nick logging
+
+
+2005-05-29(Sun) 07:06:55 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/weba.nb : use logger's message store
+
+	* ndk/logger.rb, ndk/config.rb : some changes for weba
+
+	* nadokarc : add vim pragma and FilenameEncoding setting
+
+	* ndk/client.rb, ndk/server.rb : fix logger relaod process
+
+	* ndk/server_state.rb : add channel_raw_names
+
+
+2005-05-29(Sun) 03:35:28 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* nadokarc : add BackLogBot as default bot
+
+
+2005-05-29(Sun) 03:31:07 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/server.rb : add @rc read accessor
+
+	* nadokarc, ndk/config.rb : support default setting_name
+	as rc file name
+
+
+2005-05-29(Sun) 03:04:53 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/config.rb : support filename encoding(utf-8)
+
+
+2005-05-29(Sun) 02:49:12 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/server_state.rb, ndk/config.rb, ndk/logger.rb :
+	new logging scheme is added
+
+	* nadokarc : add indent and log detail setting
+
+	* plugins/backlogbot.nb : use logger's message store
+
+
+2005-05-27(Fri) 21:32:35 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* nadokarc : comment out Quit_Message and change
+	Default_log, Log_TimeFormat setting
+
+	* ndk/client.rb : fix welcome message
+
+	* ndk/config.rb : change Default_log, System_log path,
+	Log_TimeFormat and add Log_MessageFormat.
+
+
+2005-05-26(Thu) 22:11:48 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/autodumpbot.nb, plugins/sixamobot.nb :
+	change copyright year
+
+
+2005-05-26(Thu) 22:07:15 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/config.rb : fix a bug
+
+
+2005-05-26(Thu) 21:51:10 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* nadokarc : change default quit message
+
+
+2005-05-26(Thu) 21:45:49 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* nadokarc : fix ACL comment
+
+
+2005-05-26(Thu) 21:42:29 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/backlogbot.nb : fix configuration example
+
+
+2005-05-26(Thu) 21:24:50 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* log/.deleteme : remove
+
+
+2005-05-26(Thu) 21:23:03 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/weatherbot.nb : add parentheses
+
+	* plugins/rss_checkbot.nb : add configuration :over_message
+
+
+2005-05-26(Thu) 21:03:24 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* some files : change copyright year
+
+
+2005-05-26(Thu) 20:52:32 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/googlebot.nb : fix plural support bug
+
+
+2005-05-26(Thu) 20:27:16 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/googlebot.nb : fix configuration example
+	and support plural
+
+	* plugins/rss_checkbot.nb : change bot_state format and
+	separate rss check function
+
+	* lib/rss_check.rb : return failed information if
+	exception is raised
+
+
+2005-05-26(Thu) 11:21:31 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/bot.rb : some refactoring
+
+
+2005-05-26(Thu) 10:53:40 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/autoawaybot.nb : add configuration example
+	and some refactoring
+
+
+2005-05-26(Thu) 10:44:33 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/timestampbot.nb : add :client configuration
+	(if true, output timestamp to clients. default: false)
+
+
+2005-05-26(Thu) 10:37:29 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/timestampbot.nb : fix configuration example
+
+
+2005-05-26(Thu) 10:29:16 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/message.nb => plugins/messagebot.nb
+
+	* plugins/autoaway.nb => plugins/autoawaybot.nb
+
+	* plugins/autodump.nb => plugins/autodumpbot.nb
+
+	* plugins/sixamo.nb => plugins/sixamobot.nb
+
+	* plugins/mailcheck.nb => plugins/mailcheckbot.nb
+
+	* plugins/sixamobot.nb : fix configuration example
+
+
+2005-05-26(Thu) 10:18:18 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/rss_check.nb => plugins/rss_checkbot.nb,
+
+	* plugins/cron.nb => plugins/cronbot.nb
+
+	* plugins/mailcheck.nb, plugins/modemanager.nb, plugins/weba.nb,
+	plugins/drbot.nb, plugins/rss_checkbot.nb : fix configuration example
+
+
+2005-05-26(Thu) 02:35:09 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/version.rb : 0.7.0
+
+
+2005-05-25(Wed) 14:22:32 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/config.rb, nadokarc : change bot configuration format
+	(BotConfig format)
+
+	* ndk/config.rb : Nadoka::require is supported
+	(if reload configuration, required files by Nadoka::require are cleared)
+
+	* ndk/bot.rb : BotClass (Array) => BotClasses (Hash (name => body))
+
+	* plugins/googlebot.nb : fix setting description
+	and fix google_key file path search logic
+
+	* plugins/dict_bot.nb => plugins/dictbot.nb
+
+	* plugins/backlogbot.nb : fix setting description
+
+2005-05-22(Sun) 23:40:28 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* plugins/dict_bot.nb :  /dic(.)>.../ => /\Adic(.)>.../
+
+	* plugins/googlebot.nb : remove words in results
+
+	* plugins/pastebot.nb : support fpaste
+
+
+2005-05-22(Sun) 23:28:53 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk/logger.rb : support directory auto generation
+
+
+2005-05-22(Sun) 01:53:38 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* nadoka/ : mkdir
+
+	* lib/ : mkdir
+
+	* ndk_*.rb : move to nadoka/ and change require path
+
+	* tagparts.rb, rss_check.rb : move to lib/ and change require path
+
+	* ndk_manager.rb (NDK_Manager) : move to ndk/server.rb and rename NDK_Server
+
+	* ndk_err.rb : move to ndk/error.rb
+
+
+2005-03-15(Tue) 17:30:25 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* ndk_state.rb : re-fix state management
+
+
+2005-03-04(Fri) 16:28:18 +0900  Koichi Sasada  <ko1@atdot.net>
+
+	* 0.6.4 released
+
+	* ndk_version.rb : 0.6.5
+
 
 2005-03-04(Fri) 13:23:37 +0900  Koichi Sasada  <ko1@atdot.net>
 

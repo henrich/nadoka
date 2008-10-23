@@ -12,7 +12,7 @@ Original Credit:
 == Modified
 
   Modified by K.Sasada.
-  $Id: irc.rb 65 2004-07-19 10:58:47Z ko1 $
+  $Id: irc.rb 167 2006-03-27 10:57:33Z ko1 $
   
 =end
 
@@ -311,12 +311,12 @@ module RICE
           if cmd == 'PRIVMSG' || cmd == 'NOTICE'
             # flood control
             t = Time.now
-            if t.to_i <= @prev_send_time.to_i + 1
+            if t.to_i <= @prev_send_time.to_i + 2
               sleep 1
             end
             @prev_send_time = t
           end
-          @conn[0].print message.to_s
+          @conn[0].print message.to_s unless @conn[0].closed?
         end
       else
         nil
@@ -347,9 +347,9 @@ module RICE
       #               *( letter / digit )
       #                 ; as specified in RFC 1123 [HNAME]
       # hostname   =  shortname *( "." shortname )
-      SHORTNAME = "[#{LETTER}#{DIGIT}](?:[-#{LETTER}#{DIGIT}]*[#{LETTER}#{DIGIT}])?"
+      SHORTNAME = "[#{LETTER}#{DIGIT}](?:[-#{LETTER}#{DIGIT}\/]*[#{LETTER}#{DIGIT}])?"
       HOSTNAME  = "#{SHORTNAME}(?:\\.#{SHORTNAME})*"
-
+      
       # servername =  hostname
       SERVERNAME = HOSTNAME
 

@@ -1,26 +1,26 @@
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's lisence.
 #
 #
-# $Id: ndk_manager.rb 96 2004-08-16 04:09:55Z ko1 $
+# $Id$
 # Create : K.S. 04/04/17 17:00:44
 #
 
 require 'rice/irc'
-require 'ndk_err'
-require 'ndk_config'
-require 'ndk_state'
-require 'ndk_client'
+require 'ndk/error'
+require 'ndk/config'
+require 'ndk/server_state'
+require 'ndk/client'
 
 module Nadoka
   Cmd = ::RICE::Command
   Rpl = ::RICE::Reply
 
-  class NDK_Manager
+  class NDK_Server
     TimerIntervalSec = 60
     MAX_PONG_FAIL    = 5
     
@@ -32,11 +32,7 @@ module Nadoka
       @state  = nil
 
       @state  = NDK_State.new self
-      @config = reload_config
-      @logger = @config.logger
-
-      @state.logger = @logger
-      @state.config = @config
+      reload_config
       
       @server = nil
       
@@ -48,14 +44,14 @@ module Nadoka
 
       set_signal_trap
     end
-    attr_reader :state, :connected
+    attr_reader :state, :connected, :rc
     
     def client_count
       @clients.size
     end
     
     def next_server_info
-      svinfo = @config.server_list.shift
+      svinfo = @config.server_list.sort_by{rand}.shift
       @config.server_list.push svinfo
       [svinfo[:host], svinfo[:port], svinfo[:pass]]
     end
@@ -63,22 +59,31 @@ module Nadoka
     def reload_config
       @config.remove_previous_setting if defined?(@config)
       @config = NDK_Config.new(self, @rc)
+
+      # reset logger
+      @logger = @config.logger
+      @state.logger = @logger
+      @state.config = @config
+      @clients.each{|c|
+        c.logger = @logger
+      }
     end
 
     def start_server_thread
       @server_thread = Thread.new{
         begin
           @server = make_server()
-          @logger.slog "Server connection to #{@server.server}:#{@server.port}"
+          @logger.slog "Server connection to #{@server.server}:#{@server.port}."
           @pong_recieved = true
+          
           @server.start(1){|sv|
             sv << Cmd.quit(@config.quit_message) if @config.quit_message
           }
           
-        rescue RICE::Connection::Closed, SystemCallError
+        rescue RICE::Connection::Closed, SystemCallError, IOError
           @connected = false
           part_from_all_channels
-          @logger.slog "Connection closed by server. Trying to reconnect"
+          @logger.slog "Connection closed by server. Trying to reconnect."
           
           sleep @config.reconnect_delay
           retry
@@ -89,10 +94,10 @@ module Nadoka
           
           begin
             @server.close if @server
-          rescue RICE::Connection::Closed, SystemCallError
+          rescue RICE::Connection::Closed, SystemCallError, IOError
           end
           
-          @logger.slog "Reconnect request(no server response, or client request)"
+          @logger.slog "Reconnect request (no server response, or client request)."
           
           sleep @config.reconnect_delay
           retry
@@ -210,9 +215,9 @@ module Nadoka
         when 'PART'
           @state.on_part(nick_of(q), q.params[0])
         when 'NICK'
-          @state.on_nick(nick_of(q), q.params[0])
+          @state.on_nick(nick_of(q), q.params[0], q)
         when 'QUIT'
-          @state.on_quit(nick_of(q), q.params[0])
+          @state.on_quit(nick_of(q), q.params[0], q)
         when 'TOPIC'
           @state.on_topic(nick_of(q), q.params[0], q.params[1])
         when 'MODE'
@@ -241,8 +246,8 @@ module Nadoka
 
         
         send_to_clients q
-        send_to_bot q
         @logger.logging q
+        send_to_bot q
       end
     end
 
@@ -255,7 +260,7 @@ module Nadoka
     end
     
     def enter_away
-      return if @exitting
+      return if @exitting || !@connected
       
       send_to_server Cmd.away(@config.away_message) if @config.away_message
 
@@ -278,14 +283,15 @@ module Nadoka
     end
 
     def leave_away
-      return if @exitting
+      return if @exitting || !@connected
 
       send_to_server Cmd.away()
 
       if @config.away_nick && @state.original_nick
+        sleep 2 # wait for server response
         send_to_server Cmd.nick(@state.original_nick)
         @state.original_nick = nil
-        sleep 2 # wait for server response
+        sleep 1 # wait for server response
       end
 
       @config.login_channels.each{|ch|
@@ -355,7 +361,7 @@ module Nadoka
               else
                 # fail
                 @pong_fail_count += 1
-                @logger.dlog "PONG MISS: #{@pong_fail_count}"
+                @logger.slog "PONG MISS: #{@pong_fail_count}"
                 
                 if @pong_fail_count > MAX_PONG_FAIL
                   @pong_fail_count = 0
@@ -473,17 +479,10 @@ module Nadoka
         # q[1] must be client object
         begin
           reload_config
-          if q[1]
-            q[1] << Cmd.notice(@state.nick, "configuration is reloaded")
-          end
+          @logger.slog "configuration is reloaded"
         rescue Exception => e
-          if q[1]
-            q[1] << Cmd.notice(@state.nick, "error is occure while reloading configuration")
-            q[1] << Cmd.notice(@state.nick, e.message)
-            e.backtrace.each{|line|
-              q[1] << Cmd.notice(@state.nick, line)
-            }
-          end
+          @logger.slog "error is occure while reloading configuration"
+          ndk_error e
         end
         
       when :quit_program
@@ -520,6 +519,11 @@ module Nadoka
         # invoke_event :quit_program
         Thread.main.raise NDK_QuitProgram
       } if list.any?{|e| e == 'INT'}
+      Signal.trap(:TERM){
+        # invoke_event :quit_program
+        Thread.main.raise NDK_QuitProgram
+      } if list.any?{|e| e == 'TERM'}
+
       Signal.trap(:HUP){
         # reload config
         invoke_event :reload_config
@@ -581,6 +585,12 @@ module Nadoka
           cl << msg
         }
       end
+    end
+
+    def ping_to_clients
+      @clients.each{|cl|
+        cl << Cmd.ping(cl.remote_host)
+      }
     end
 
     # clientA -> other clients
@@ -716,10 +726,11 @@ module Nadoka
     end
     
     def ndk_error err
-      $stderr.puts err
-      $stderr.puts err.backtrace.join("\n")
-      @logger.slog err
-      @logger.slog err.backtrace.join(' // ')
+      @logger.slog "Exception #{err.class} - #{err}"
+      @logger.slog "-- backtrace --"
+      err.backtrace.each{|line|
+        @logger.slog "| " + line
+      }
     end
     
   end

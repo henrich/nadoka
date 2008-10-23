@@ -1,12 +1,12 @@
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's lisence.
 #
 # 
-# $Id: rss_check.rb 40 2004-07-05 19:09:05Z ko1 $
+# $Id$
 # Create : K.S. Sat, 24 Apr 2004 12:10:31 +0900
 #
 
@@ -22,6 +22,7 @@ require 'csv'
 require 'stringio'
 require 'zlib'
 
+
 class RSS_Check
   class RSS_File
     def initialize path, init_now
@@ -30,11 +31,19 @@ class RSS_Check
     end
     
     def check
-      if (mt=mtime) > @file_time
-        @file_time = mt
-        check_entries
-      else
-        []
+      begin
+        if (mt=mtime) > @file_time
+          @file_time = mt
+          check_entries
+        else
+          []
+        end
+      rescue => e
+        [{
+          :about => e.message,
+          :title => "RSS Check Error (#{@uri})",
+          :ccode => 'UTF-8'
+        }]
       end
     end
 
@@ -137,7 +146,7 @@ class RSS_Check
     }.flatten
   end
 
-  def dump
+  def save
     @db.transaction{
       @paths.each_with_index{|path, i|
         @db[path] = @rss_files[i]

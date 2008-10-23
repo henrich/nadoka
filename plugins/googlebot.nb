@@ -1,13 +1,13 @@
 # -*-ruby-*-
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's lisence.
 #
 #
-# $Id: googlebot.nb 101 2004-08-20 09:55:07Z ko1 $
+# $Id: googlebot.nb 169 2006-08-11 05:46:30Z ko1 $
 #
 
 =begin
@@ -32,19 +32,17 @@
 
 == Configuration:
 
-BotConfig = {
-  :GoogleBot => {
-    :ch => /.*/,                     # available channel
-    
-    :key     => 'xxxx',              # 
-    :keypath => '/x/y/z/google_key', # specify one
-                                     # or put google key file on ~/.google_key
-    #
-    :googlec_maxwords => 5,
-    :search_default_lang => 'lang_ja',
-    :count_default_lang  => '',
-  }
-}
+BotConfig = [
+{
+  :name                => :GoogleBot,
+  :ch                  => /.*/,
+  :key                 => nil,
+  :key_path            => '~/.google_key',
+  :googlec_maxwords    => 5,
+  :search_default_lang => 'lang_ja',
+  :count_default_lang  => '',
+},
+]
 
 =end
 
@@ -64,6 +62,7 @@ class GoogleBot < Nadoka::NDK_Bot
     @count_default_lang  = @bot_config[:count_default_lang]  || ''
     google_wsdl = 'http://api.google.com/GoogleSearch.wsdl'
     @google = SOAP::WSDLDriverFactory.new(google_wsdl).create_driver
+    @google.generate_explicit_type = true
   end
   
   def on_privmsg prefix, ch, msg
@@ -81,10 +80,10 @@ class GoogleBot < Nadoka::NDK_Bot
         "goo#{$1}gle bot#{$2}: #{search($1.length, $2, $3)}"
         
       when /^googlec(:.*)?>\s*(.+)/
-        "googlec bot(#{$2}): #{googlec($1, $2)}"
+        "googlec bot: #{googlec($1, $2)}"
       end
     rescue Exception => e
-      "google bot: #{e.class}(#{e.message})"
+      "google bot: #{e.class}(#{e.message} @ #{e.backtrace[0]})"
     end
   end
   
@@ -93,26 +92,25 @@ class GoogleBot < Nadoka::NDK_Bot
     word = search_char_code(word)
     
     result = @google.doGoogleSearch(
-      @google_key, word, cnt, 1, false, "", false, lang, 'utf-8', 'utf-8' )
+      @google_key, word, cnt, 1, false, "", false, lang, '', '' )
 
-    count = result.estimatedTotalResultsCount
+    count = result.estimatedTotalResultsCount.to_i
     if count > 0
       count = count.to_s.gsub(/(\d)(?=\d{3}+$)/, '\\1,')
       url   =  title = ''
     
       result.resultElements.each_with_index{|e, i|
-        url   = e.URL
+        url   = e['URL']
         title = show_char_code_and_erace_tag(e.title)
       }
-      
-      "#{title} - #{url} (and #{count} hits)"
+      "#{title} - #{url} (and #{count} hit#{(count.to_i > 1) ? 's' : ''})"
     else
       "no match"
     end
   end
 
   def googlec lang, word
-    lang = lang_check(lang)
+    lang = lang_check(lang, @count_default_lang)
     words = Shellwords.shellwords(word)
     return 'too many options' if words.size > @googlec_maxwords
 
@@ -126,18 +124,15 @@ class GoogleBot < Nadoka::NDK_Bot
   
   def google_key
     @bot_config[:key] ||
-    if @bot_config[:key_path]
-      File.open(@bot_config[:key_path]).read.chomp
-    else
-      File.open(File.expand_path("~/.google_key")).read.chomp
-    end
+    File.open(File.expand_path(@bot_config[:key_path] ||
+                               "~/.google_key")).read.chomp
   end
-  
+
   def erace_tag str
     CGI.unescapeHTML(str.gsub(/\<.+?\>/, ''))
   end
 
-  def lang_check lang
+  def lang_check lang, default = @search_default_lang
     if !lang
       @search_default_lang
     else
@@ -151,12 +146,14 @@ class GoogleBot < Nadoka::NDK_Bot
   end
   
   def show_char_code_and_erace_tag str
+    return CGI.unescapeHTML(erace_tag(str.toeuc)).tojis
+
     case $KCODE
     when 'EUC', 'SJIS'
       CGI.unescapeHTML(str.gsub(/\<.+?\>/, '')).tojis
     when 'NONE', 'UTF-8'
       begin
-        str = Iconv.conv("EUC-JP", "UTF-8", str)
+        str = Iconv.iconv("EUC-JP", "UTF-8", str).join
         CGI.unescapeHTML(str.gsub(/\<.+?\>/, '')).tojis
       rescue => e
         "(char code problem: #{e.class}[#{e.message.dump}])"
@@ -165,16 +162,16 @@ class GoogleBot < Nadoka::NDK_Bot
       str
     end
   end
-  
+ 
   def search_char_code str
     case $KCODE
     when 'EUC', 'SJIS'
       str.toeuc
     when 'NONE'
       begin
-        Iconv.conv("UTF-8", "EUC-JP", str.toeuc)
+        Iconv.iconv("UTF-8", "EUC-JP", str.toeuc).join
       rescue => e
-        "(char code problem: #{e.class})"
+        raise "(char code problem: #{e.class})"
       end
     when 'UTF-8'
       str

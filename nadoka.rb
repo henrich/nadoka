@@ -4,26 +4,27 @@
 ##  Irc Client Server Program
 ##
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's lisence.
 #
 #
-# $Id: nadoka.rb 46 2004-07-07 08:17:33Z ko1 $
+# $Id: nadoka.rb 158 2005-06-25 10:04:37Z ko1 $
 # Create : K.S. 03/07/10 20:29:07
 #
 
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
-require 'ndk_version'
+require 'ndk/version'
 
 if $0 == __FILE__
 
 require 'optparse'
-require 'ndk_manager'
-require 'ndk_bot'
+
+require 'ndk/server'
+require 'ndk/bot'
 
 $stdout.sync=true
 $NDK_Debug  = false
@@ -73,11 +74,16 @@ end
 
 begin
   GC.start
-  Nadoka::NDK_Manager.new(rcfile).start
+  Nadoka::NDK_Server.new(rcfile).start
 rescue Nadoka::NDK_QuitProgram
   #
 rescue Nadoka::NDK_RestartProgram
   retry
+rescue Exception => e
+  open('nadoka_fatal_error', 'w'){|f|
+    f.puts e
+    f.puts e.backtrace.join("\n")
+  } 
 end
 
 end

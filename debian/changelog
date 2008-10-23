@@ -1,3 +1,9 @@
+nadoka (0.7.0-1) UNRELEASED; urgency=low
+
+  * (NOT RELEASED YET) New upstream release
+
+ -- Taku YASUI <tach@debian.or.jp>  Thu, 23 Oct 2008 12:09:23 +0900
+
 nadoka (0.6.4-1) unstable; urgency=low
 
   * Initial release

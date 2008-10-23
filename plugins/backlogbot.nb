@@ -1,13 +1,13 @@
 # -*-ruby-*-
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's lisence.
 #
 #
-# $Id: backlogbot.nb 92 2004-08-13 01:50:18Z ko1 $
+# $Id: backlogbot.nb 148 2005-06-07 21:30:52Z ko1 $
 #
 
 =begin
@@ -22,168 +22,67 @@ BackLogBot support rich backlog management scheme.
 #
 # Maybe you don't have to write config(default setting is very useful)
 #
-
-BotConfig = {
-  :BackLogBot => {
-    :method => :by_size,      # or :by_time(default: :by_size)
-    :limit  => 300,           # or (60 * 60 * 24) => 1day
-                              # (default: 300 or (60 * 60 * 24))
-                              #
-                              # if 'method' is :by_time, limit means
-                              # how long bot store the messages(sec)
-                              #
-                              # if 'method' is :by_size, limit means
-                              # how many messages to store
-                              #
-    :clear  => false,         # (default: false) clear messages after output
-    :talker => nil,           # if :pseudo_owner is specified, talker will be
-                              # original talker (default: nil)
-                              # 
-    :prefix => 'BackLog',     # message prefix (default: 'BL')
-    :sender => 'BackLogger',  # back log messages sender
-                              # (default: 'backlogbot')
-    :time_format => '%H:%M',  # (default: '%m/%d-%H:%M')
-  },
+BotConfig = [
+{
+  :name   => :BackLogBot,
+  
+  :clear       => false,        # if true, clear backlogs when output once
+  :talker      => false,        # if true, talker will be pseudo talker 
+  :prefix      => 'BL',
+  :sender      => 'backlogbot',
+  :time_format => '%m/%d-%H:%M',
 }
+]
 
 =end
 
 
 class BackLogBot < Nadoka::NDK_Bot
-  
-  class LimitedObjectStore
-    include Enumerable
-    
-    def initialize limit
-      @store = []
-      @limit = limit
-    end
-
-    def push ch, nick, msg
-      @store << [ch, nick, msg, Time.now]
-      if @store.size > @limit
-        @store = @store[@store.size - @limit .. -1]
-      end
-    end
-
-    def each
-      @store.each{|m|
-        # ch, nick, msg, time
-        yield m[0], m[1], m[2], m[3]
-      }
-    end
-
-    def clear
-      @store.replace []
-    end
-  end
-  
-  class LimitedObjectStoreByTime < LimitedObjectStore
-    def push ch, nick, msg
-      @store << [ch, nick, msg, Time.now]
-      limit = Time.now - @limit
-      while @store[0] && (@store[0][3] < limit)
-        @store.shift
-      end
-    end
-  end
-  
-  ##########################################################
-  
   def bot_initialize
-    @method = @bot_config[:method] || :by_size
-    case @method
-    when :by_size
-      @limit = @bot_config[:limit] || 300
-      @store_klass = LimitedObjectStore
-    when :by_time
-      @limit = @bot_config[:limit] || (60 * 60 * 24)
-      @store_klass = LimitedObjectStoreByTime
-    end
-
-    @talker = @bot_config.fetch(:talker, nil)
+    @stores = @logger.message_stores
+    @talker = @bot_config.fetch(:talker, false)
     @clear  = @bot_config.fetch(:clear, false)
     @prefix = @bot_config.fetch(:prefix, 'BL')
     @sender = @bot_config.fetch(:sender, 'backlogbot')
     @sepr   = @bot_config.fetch(:separate, true)
     @tmfmt  = @bot_config.fetch(:time_format, '%m/%d-%H:%M')
-    @store_pool = {}
+    @msgfmts= @bot_config.fetch(:message_format, @config.default_log[:message_format])
   end
 
   def channel_message? ch
     /\A[\&\#\+\!]/ =~ ch
   end
 
-  def push rch, nick, msg
-    ch = ccn(rch)
-    if !channel_message?(ch)
-      nick = "#{nick} => #{ch}"
-      ch   = nil
-    end
-    
-    ch = nil unless @sepr
-    
-    unless store = @store_pool[ch]
-      store = @store_pool[ch] =
-        @store_klass.new(@config.ch_config(ch, :backlog_lines) ||
-                         @config.backlog_lines                 ||
-                         @limit)
-    end
-    
-    store.push ch, nick, msg
-  end
-
-  ##
-
   def on_client_login client_count, client
-    @store_pool.each{|chkey, store|
-      store.each{|ch, nick, msg, time|
-        sch = @state.current_channels[ch] ? ch : @state.nick
-        
-        if ch
-          if chs = @state.current_channels[ch]
-            cmd = Cmd.notice(chs.name, "#{@prefix}(#{time.strftime(@tmfmt)}) #{nick}: #{msg}")
-            client.add_prefix(cmd, @talker ? nick : @sender)
+    @stores.each_channel_pool{|ch, msgobjs|
+      if @state.current_channels[ch]
+        msgobjs.each{|msgobj|
+          msg  = @config.log_format_message(@msgfmts, msgobj)
+          rch  = msgobj[:ch]
+          time = msgobj[:time]
+
+          cmd = Cmd.notice(rch, "#{@prefix}(#{time.strftime(@tmfmt)}) #{msg}")
+          client.add_prefix(cmd, @talker ? nick : @sender)
+          client.send_msg cmd
+        }
+      else
+        msgobjs.each{|msgobj|
+          if ch == :__talk__
+            msg  = @config.log_format_message(@config.talk_log[:message_format], msgobj)
           else
-            cmd = Cmd.notice(sch, "#{@prefix}(#{time.strftime(@tmfmt)}) #{ch} - #{nick}: #{msg}")
+            msg  = @config.log_format_message(@config.system_log[:message_format], msgobj)
           end
-        else
-          cmd = Cmd.notice(@state.nick, "#{@prefix}(#{time.strftime(@tmfmt)}) #{nick}: #{msg}")
-        end
-        
-        client.send_msg cmd
-      }
-      store.clear if @clear
+          
+          rch  = msgobj[:ch]
+          time = msgobj[:time]
+          
+          cmd = Cmd.notice(@state.nick, "#{@prefix}(#{time.strftime(@tmfmt)}) #{msg}")
+          client.send_msg cmd
+        }
+      end
     }
+    @stores.clear if @clear
   end
-  
-  ###############################################
-  # collect message
-  
-  def on_privmsg prefix, ch, msg
-    push ch, prefix.nick, msg
-  end
-  
-  def on_notice prefix, ch, msg
-    push ch, prefix.nick, msg
-  end
-
-  def on_join prefix, ch
-    push ch, nil, "+ #{prefix.nick}"
-  end
-
-  def on_part prefix, ch, msg = ''
-    push ch, nil, "- #{prefix.nick}(#{msg})"
-  end
-
-  def on_topic prefix, ch, topic
-    push ch, nil, "<TOPIC:#{prefix.nick}> - #{topic}"
-  end
-
-  def on_quit_from_channel ch, nick, msg = ''
-    push ch, nil, "- #{nick}(#{msg})*"
-  end
-  
 end
 
 

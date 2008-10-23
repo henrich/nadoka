@@ -1,34 +1,21 @@
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
-# the same terms of the Ruby's lisence.
+# the same terms of the Ruby's licence.
 #
 #
-# $Id: ndk_bot.rb 83 2004-07-21 10:20:03Z ko1 $
+# $Id$
 # Create : K.S. 04/04/19 00:39:48
 #
 #
 # To make bot for nadoka, see this code.
 #
-require 'ndk_manager'
+
 module Nadoka
   class NDK_Bot
-    Cmd = ::Nadoka::Cmd
-    Rpl = ::Nadoka::Rpl
-
-    def initialize manager, config, bot_config
-      @manager = manager
-      @config  = config
-      @logger  = config.logger
-      @state   = manager.state
-      @bot_config = bot_config
-      
-      bot_initialize
-    end
-
-    # To initialize bot insntace, please overide this.
+    # To initialize bot instance, please override this.
     def bot_initialize
       # do something
     end
@@ -48,39 +35,58 @@ module Nadoka
       end
     end
 
-    # To access bot confiuration, please use this.
+    # To access bot configuration, please use this.
     #
-    # in configuration file, 
-    # BotConfig = {
-    #   :BotClassName => {
-    #     ... # you can access this value
-    #   }
-    # }
+    # in configuration file,
+    # BotConfig = [
+    # :BotClassName1,
+    # :BotClassName2,
+    # {
+    #   :name => :BotClassName3,
+    #   :setX => X,
+    #   :setY => Y,
+    #   ...
+    # },
+    # ]
     #
-    # !! This method is obsoleted. Use @bot_config instead !!
+    # You can access above setting via @bot_config
     #
-    def config
-      @logger.dlog "NDK_Bot#config is obsolete. Use @bot_config instead"
-      @bot_config
-    end
 
     # Mostly, you need this method.
     def send_notice ch, msg
-      msg = Cmd.notice(ch, msg)
+      chs = @manager.state.current_channels[ch]
+      if chs
+        rch = chs.name
+      else
+        rch = ch
+      end
+      msg = Cmd.notice(rch, msg)
       @manager.send_to_server  msg
       @manager.send_to_clients_otherwise msg, nil
     end
 
-    # Usualy, you must not use this
+    # Usually, you must not use this
     def send_privmsg ch, msg
-      msg = Cmd.privmsg(ch, msg)
+      chs = @manager.state.current_channels[ch]
+      if chs
+        rch = chs.name
+      else
+        rch = ch
+      end
+      msg = Cmd.privmsg(rch, msg)
       @manager.send_to_server  msg
       @manager.send_to_clients_otherwise msg, nil
     end
 
     # Change user's mode as 'mode' on ch.
     def change_mode ch, mode, user
-      send_msg Cmd.mode(ch, mode, user)
+      chs = @manager.state.current_channels[ch]
+      if chs
+        rch = chs.name
+      else
+        rch = ch
+      end
+      send_msg Cmd.mode(rch, mode, user)
     end
 
     # Change your nick to 'nick'.
@@ -98,14 +104,14 @@ module Nadoka
       @config.canonical_channel_name ch
     end
     alias ccn canonical_channel_name
-    
+
 =begin
     # ...
     # def on_[IRC Command or Reply(3 digits)] prefix(nick only), param1, param2, ...
     #   
     # end
     #
-    
+
     # like these
     def on_privmsg prefix, ch, msg
       
@@ -136,15 +142,14 @@ module Nadoka
 
     
     ######
-    # spcial event
+    # special event
 
-    # This method will be called when recieved every message
+    # This method will be called when received every message
     def on_every_message prefix, command, *args
       # 
     end
 
     # if 'nick' user quit client and part ch, this event is called.
-    # !! ch is canonicarized channel name !!
     def on_quit_from_channel ch, nick, qmsg
       # do something
     end
@@ -182,16 +187,32 @@ module Nadoka
     - @state.nick         # your current nick
     - @state.channels     # channels which you are join        ['ch1', 'ch2', ...]
 
-    # need canonicarized channel name
+    # need canonicalized channel name
     - @state.channel_users(ch) # channel users ['user1', ...]
     - @state.channel_user_mode(ch, nick)
     
 =end
-    
-    def self.inherited subklass
-      BotClass << subklass
+
+    Cmd = ::Nadoka::Cmd
+    Rpl = ::Nadoka::Rpl
+
+    def initialize manager, config, bot_config
+      @manager    = manager
+      @config     = config
+      @logger     = config.logger
+      @state      = manager.state
+      @bot_config = bot_config
+
+      bot_initialize
     end
-    
+
+    def config
+      @bot_config
+    end
+
+    def self.inherited klass
+      NDK_Config::BotClasses[klass.name.downcase.intern] = klass
+    end
   end
 end
 

@@ -1,12 +1,12 @@
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's lisence.
 #
 #
-# $Id: ndk_client.rb 89 2004-08-01 23:03:48Z ko1 $
+# $Id$
 # Create : K.S. 04/04/17 16:50:10
 #
 
@@ -31,7 +31,10 @@ module Nadoka
       @realname = nil
       @hostname = nil
     end
-    
+
+    attr_writer :logger
+    attr_reader :remote_host
+
     def start
       send_thread = Thread.new{
         begin
@@ -134,7 +137,7 @@ module Nadoka
       end
       
       send_reply Rpl.rpl_welcome( nick,
-        'Welcome to the Internet Relay Network'+"#{nick}! #{@username}@#{@remote_host}")
+        'Welcome to the Internet Relay Network '+"#{nick}!#{@username}@#{@remote_host}")
       send_reply Rpl.rpl_yourhost(nick, "Your host is nadoka, running version #{NDK_Version}")
       send_reply Rpl.rpl_created( nick, 'This server was created ' + NDK_Created.asctime)
       send_reply Rpl.rpl_myinfo(  nick, "nadoka #{NDK_Version} aoOirw abeiIklmnoOpqrstv")

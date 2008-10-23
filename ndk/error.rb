@@ -1,12 +1,12 @@
 #
-# Copyright (c) 2004 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's lisence.
 #
 # 
-# $Id: ndk_err.rb 40 2004-07-05 19:09:05Z ko1 $
+# $Id$
 # Create : K.S. 04/04/20 23:57:17
 #
 
