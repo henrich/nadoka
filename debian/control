@@ -2,8 +2,8 @@ Source: nadoka
 Section: net
 Priority: optional
 Maintainer: Taku YASUI <tach@debian.or.jp>
-Build-Depends-Indep: cdbs, debhelper (>= 4.0.0)
-Standards-Version: 3.6.2.1
+Build-Depends: cdbs, debhelper (>= 4.0.0)
+Standards-Version: 3.8.0
 
 Package: nadoka
 Architecture: all
