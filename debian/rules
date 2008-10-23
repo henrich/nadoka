@@ -7,5 +7,6 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 
 binary-install/nadoka::
 	install -m 0755 nadoka $(CURDIR)/debian/nadoka/usr/bin/nadoka
-	cp -a *.rb plugins rice $(CURDIR)/debian/nadoka/usr/share/nadoka
+	cp -a *.rb lib ndk plugins rice $(CURDIR)/debian/nadoka/usr/share/nadoka
 	find $(CURDIR)/debian/nadoka/usr/share/nadoka -name '*.[nr]b' | xargs chmod ugo-x
+	perl -npe "s!'./plugins'!'/usr/share/nadoka/plugins'!" nadokarc > $(CURDIR)/debian/nadoka/usr/share/doc/nadoka/examples/nadokarc
