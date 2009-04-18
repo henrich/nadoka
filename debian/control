@@ -1,7 +1,7 @@
 Source: nadoka
 Section: net
 Priority: optional
-Maintainer: Taku YASUI <tach@debian.or.jp>
+Maintainer: Taku YASUI <tach@debian.org>
 Build-Depends: cdbs, debhelper (>= 5.0.0)
 Standards-Version: 3.8.0
 
