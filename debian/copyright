@@ -1,17 +1,17 @@
-This package was debianized by Taku YASUI <tach@debian.or.jp> on
-Thu, 21 Jul 2005 00:35:11 +0900.
+Format-Specification:
+    http://wiki.debian.org/Proposals/CopyrightFormat?action=recall&rev=454
+Upstream-Maintainer: SASADA Koichi <ko1@atdot.net>
+Upstream-Source: http://www.atdot.net/nadoka/
+Upstream-Name: Nadoka
 
-It was downloaded from <URL:http://www.atdot.net/nadoka/>
+Files: *
+Copyrignt: Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
+License: other
+    This program is free software with ABSOLUTELY NO WARRANTY.
+    You can re-distribute and/or modify this program under
+    the same terms of the Ruby's licence.
 
-Copyright Holder: SASADA Koichi <ko1@atdot.net>
-
-License:
-
-This program is free software with ABSOLUTELY NO WARRANTY.
-You can re-distribute and/or modify this program under
-the same terms of the Ruby's licence.
-
-== Ruby's license ==
+    == Ruby's license ==
 
   1. You may make and give away verbatim copies of the source form of the
      software without restriction, provided that you duplicate all of the
@@ -65,3 +65,13 @@ the same terms of the Ruby's licence.
      IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
      WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR
      PURPOSE.
+
+Files: debian/*
+Copyright: Copyright (C) 2005-2009 Taku YASUI <tach@debian.org>
+License: GPL-2+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2, or (at your option)
+    any later version.
+    On Debian GNU/Linux systems, the complete text of the GNU General
+    Public License can be found in `/usr/share/common-licenses/GPL'
