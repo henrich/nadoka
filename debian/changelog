@@ -1,3 +1,9 @@
+nadoka (0.7.0-2) unstable; urgency=low
+
+  * New debian/compat: 5
+
+ -- Taku YASUI <tach@debian.org>  Sun, 19 Apr 2009 07:53:03 +0900
+
 nadoka (0.7.0-1) unstable; urgency=low
 
   * New upstream release
