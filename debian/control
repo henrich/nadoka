@@ -3,6 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Taku YASUI <tach@debian.org>
 Build-Depends: cdbs, debhelper (>= 5.0.0)
+Homepage: http://www.atdot.net/nadoka/
 Standards-Version: 3.8.1
 
 Package: nadoka
