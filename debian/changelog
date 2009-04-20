@@ -1,3 +1,9 @@
+nadoka (0.7.0-3) unstable; urgency=low
+
+  * Add debian/watch file
+
+ -- Taku YASUI <tach@debian.org>  Tue, 21 Apr 2009 04:05:11 +0900
+
 nadoka (0.7.0-2) unstable; urgency=low
 
   * New debian/compat: 5
