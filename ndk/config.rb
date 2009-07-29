@@ -3,7 +3,7 @@
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
-# the same terms of the Ruby's lisence.
+# the same terms of the Ruby's license.
 #
 #
 # $Id$
@@ -148,6 +148,7 @@ module Nadoka
     # filters
     Privmsg_Filter = []
     Notice_Filter  = []
+    Primitive_Filters = {}
 
     # ...
     Privmsg_Filter_light = []
@@ -223,6 +224,7 @@ module Nadoka
       return load_bots_old if @config[:botconfig].kind_of? Hash
       @bots = @config[:botconfig].map{|bot|
         if bot.kind_of? Hash
+          next nil if bot[:disable]
           name = bot[:name]
           cfg  = bot
           raise "No bot name specified. Check rcfile." unless name
@@ -232,7 +234,7 @@ module Nadoka
         end
         load_botfile name.to_s.downcase
         make_bot_instance name, cfg
-      }
+      }.compact
     end
 
     # for compatibility
@@ -276,12 +278,13 @@ module Nadoka
           ports = si[:port] || 6667
           host  = si[:host]
           pass  = si[:pass]
+          ssl_params  = si[:ssl_params]
           if ports.respond_to? :each
             ports.each{|port|
-              svl << {:host => host, :port => port,  :pass => pass}
+              svl << {:host => host, :port => port,  :pass => pass, :ssl_params => ssl_params}
             }
           else
-            svl <<   {:host => host, :port => ports, :pass => pass}
+            svl <<   {:host => host, :port => ports, :pass => pass, :ssl_params => ssl_params}
           end
         }
         @config[:server_list] = svl
@@ -425,31 +428,32 @@ module Nadoka
     }
     
     def make_logfilename tmpl, rch, cn
-      ch = rch.sub(/^\!.{5}/, '!')
+      unless cn
+        cn = rch.sub(/^\!.{5}/, '!')
 
-      case @config[:filenameencoding].to_s.downcase[0]
-      when ?e # EUC
-        ch = ch.toeuc.downcase
-      when ?s # SJIS
-        ch = ch.tosjis.downcase
-      when ?u # utf-8
-        ch = ch.toutf8.downcase
-      else    # JIS
-        ch = ch.toeuc.downcase.tojis
-        ch = URI.encode(ch)
+        case @config[:filenameencoding].to_s.downcase[0]
+        when ?e # EUC
+          cn = cn.toeuc.downcase
+        when ?s # SJIS
+          cn = cn.tosjis.downcase
+        when ?u # utf-8
+          cn = cn.toutf8.downcase
+        else    # JIS
+          cn = cn.toeuc.downcase.tojis
+          cn = URI.encode(cn)
+        end
+
+        # escape
+        cn = cn.sub(/^[\&\#\+\!]|/){|c|
+          RName[c]
+        }
+        cn = cn.tr("*:/", "__I")
       end
-      
-
-      # escape
-      ch  = ch.sub(/^[\&\#\+\!]|/){|c|
-        RName[c]
-      }
-      ch  = ch.gsub(/\*|\:/, '_').gsub(/\//, 'I')
 
       # format
       str = Time.now.strftime(tmpl)
       str.gsub(/\$\{setting_name\}/, setting_name).
-          gsub(/\$\{channel_name\}|\{ch\}/, cn || ch)
+          gsub(/\$\{channel_name\}|\{ch\}/, cn)
     end
 
     def log_format timefmt, msgfmts, msgobj

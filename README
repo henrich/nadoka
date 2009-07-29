@@ -4,7 +4,7 @@
 # Written by SASADA Koichi <ko1 at atdot.net>
 #
 #
-# $Id: README 102 2004-08-21 19:48:56Z ko1 $
+# $Id: README 198 2009-07-27 10:54:55Z znz $
 #
 
 * What's this?
@@ -20,7 +20,9 @@ You can do with this software:
 
 * more about
 
-See Web page: http://www.atdot.net/nadoka/
+See Web pages:
+- http://www.atdot.net/nadoka/
+- http://rubyforge.org/projects/nadoka/
 
 
 Thank you,

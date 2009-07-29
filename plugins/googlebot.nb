@@ -4,10 +4,10 @@
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
-# the same terms of the Ruby's lisence.
+# the same terms of the Ruby's license.
 #
 #
-# $Id: googlebot.nb 169 2006-08-11 05:46:30Z ko1 $
+# $Id: googlebot.nb 196 2009-07-03 15:24:43Z znz $
 #
 
 =begin
@@ -86,13 +86,23 @@ class GoogleBot < Nadoka::NDK_Bot
       "google bot: #{e.class}(#{e.message} @ #{e.backtrace[0]})"
     end
   end
-  
+ 
+  def do_search word, cnt, lang
+    i = 0
+    begin
+      @google.doGoogleSearch(
+        @google_key, word, cnt, 1, false, "", false, lang, '', '')
+    rescue Exception => e
+      retry if (i+=1) < 5
+      raise
+    end
+  end
+ 
   def search cnt, lang, word
     lang = lang_check(lang)
     word = search_char_code(word)
     
-    result = @google.doGoogleSearch(
-      @google_key, word, cnt, 1, false, "", false, lang, '', '' )
+    result = do_search word, cnt, lang
 
     count = result.estimatedTotalResultsCount.to_i
     if count > 0
@@ -111,13 +121,12 @@ class GoogleBot < Nadoka::NDK_Bot
 
   def googlec lang, word
     lang = lang_check(lang, @count_default_lang)
-    words = Shellwords.shellwords(word)
+    words = Shellwords.shellwords(word).map{|e| "\"#{e}\""}
     return 'too many options' if words.size > @googlec_maxwords
 
     words.map{|rw|
       w = search_char_code(rw)
-      result = @google.doGoogleSearch(
-        @google_key, "'#{w}'", 0, 1, false, "", false, lang, 'utf-8', 'utf-8')
+      result = do_search "'#{w}'", 0, lang
       "#{rw}(#{result.estimatedTotalResultsCount.to_s.gsub(/(\d)(?=\d{3}+$)/, '\\1,')})"
     }.join(', ')
   end

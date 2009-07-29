@@ -3,7 +3,7 @@
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
-# the same terms of the Ruby's lisence.
+# the same terms of the Ruby's license.
 #
 #
 # $Id$
@@ -197,7 +197,7 @@ module Nadoka
 
     # channel message
     def clog ch, msg, nostamp = false
-      clog_msgobj ch, make_msgobj(msg, 'SIMPLE', nostamp)
+      clog_msgobj ch, make_msgobj(msg, 'SIMPLE', nostamp, ch)
     end
 
     # other irc log message
@@ -206,12 +206,13 @@ module Nadoka
     end
 
     #########################################
-    def make_msgobj msg, type = msg.command, nostamp = false
+    def make_msgobj msg, type = msg.command, nostamp = false, ch = nil
       msgobj = {
         :time    => Time.now,
         :type    => type,
         :orig    => msg,
         :nostamp => nostamp,
+        :ch      => ch,
       }
 
       msgobj

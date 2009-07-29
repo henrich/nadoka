@@ -1,7 +1,7 @@
 ## -*-ruby-*- vim: set filetype=ruby :
 ##
 ## Nadoka Sample resource file
-## $Id: nadokarc 171 2006-08-31 16:57:04Z znz $
+## $Id: nadokarc 190 2009-04-16 10:56:26Z znz $
 #
 # Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
@@ -76,6 +76,14 @@ class NADOKA_Config < Nadoka::NDK_ConfigBase
     # IPv6 Sample
     # { :host => 'irc6.nara.wide.ad.jp',
     #   :port => 6667
+    # }
+    # SSL Sample
+    # {
+    #   :host => 'ircs.example.net',
+    #   :port => 994,
+    #   :ssl_params => { # with :ssl_params hash, use ssl
+    #     # :ca_cert => "/etc/ssl/certs", # default: openssl's default certificates
+    #  },
     # }
   ]
 

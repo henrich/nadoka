@@ -4,10 +4,10 @@
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
-# the same terms of the Ruby's lisence.
+# the same terms of the Ruby's license.
 #
 #
-# $Id: samplebot.nb 130 2005-05-26 12:04:08Z ko1 $
+# $Id: samplebot.nb 181 2007-02-20 15:39:21Z znz $
 #
 
 # bot_file_name and BotClassName must be same name

@@ -3,7 +3,7 @@
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
-# the same terms of the Ruby's lisence.
+# the same terms of the Ruby's license.
 #
 #
 # $Id$
@@ -53,7 +53,7 @@ module Nadoka
     def next_server_info
       svinfo = @config.server_list.sort_by{rand}.shift
       @config.server_list.push svinfo
-      [svinfo[:host], svinfo[:port], svinfo[:pass]]
+      [svinfo[:host], svinfo[:port], svinfo[:pass], svinfo[:ssl_params]]
     end
     
     def reload_config
@@ -110,8 +110,8 @@ module Nadoka
     end
     
     def make_server
-      host, port, @server_passwd = next_server_info
-      server = ::RICE::Connection.new(host, port)
+      host, port, @server_passwd, ssl_params = next_server_info
+      server = ::RICE::Connection.new(host, port, "\r\n", ssl_params)
       server.regist{|rq, wq|
         Thread.stop
         @rq = rq
@@ -198,7 +198,9 @@ module Nadoka
       if @clients.size == 0
         enter_away
       end
-      
+
+      invoke_event :invoke_bot, :server_connected
+
       # loop
       while q = recv_from_server
         
@@ -411,6 +413,10 @@ module Nadoka
         end
         
         # Server -> Nadoka message
+        if !@config.primitive_filters.nil? && !@config.primitive_filters[q.command].nil? && !@config.primitive_filters[q.command].empty?
+          next unless filter_message(@config.primitive_filters[q.command], q)
+        end
+
         case q.command
         when 'PING'
           @server << Cmd.pong(q.params[0])
