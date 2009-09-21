@@ -16,4 +16,4 @@ How to use nadoka on Debian systems
     % cd /home/myname/nadoka
     % nadoka --rc nadokarc
 
- -- Taku YASUI <tach@debian.or.jp>, Thu, 21 Jul 2005 00:35:11 +0900
+ -- Taku YASUI <tach@debian.org>, Thu, 21 Jul 2005 00:35:11 +0900
