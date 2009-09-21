@@ -1,7 +1,7 @@
 Format-Specification:
     http://wiki.debian.org/Proposals/CopyrightFormat?action=recall&rev=454
 Upstream-Maintainer: SASADA Koichi <ko1@atdot.net>
-Upstream-Source: http://www.atdot.net/nadoka/
+Upstream-Source: http://rubyforge.org/frs/?group_id=5489
 Upstream-Name: Nadoka
 
 Files: *

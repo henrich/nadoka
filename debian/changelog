@@ -1,8 +1,10 @@
 nadoka (0.7.2-1) unstable; urgency=low
 
   * New upstream release
+  * Change download URL
+    - Move to RubyForge (http://rubyforge.org/frs/?group_id=5489)
 
- -- Taku YASUI <tach@debian.org>  Mon, 21 Sep 2009 13:31:16 +0900
+ -- Taku YASUI <tach@debian.org>  Mon, 21 Sep 2009 13:34:01 +0900
 
 nadoka (0.7.1-1) unstable; urgency=low
 
