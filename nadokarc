@@ -1,7 +1,7 @@
 ## -*-ruby-*- vim: set filetype=ruby :
 ##
 ## Nadoka Sample resource file
-## $Id: nadokarc 190 2009-04-16 10:56:26Z znz $
+## $Id: nadokarc 203 2009-08-17 08:17:29Z znz $
 #
 # Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
@@ -32,7 +32,7 @@ class NADOKA_Config < Nadoka::NDK_ConfigBase
 
   ###############################################
   # client server setting
-  Client_server_port = 6667
+  Client_server_port = 6667 # or nil (no listen)
   Client_server_host = nil # You can specify binding host(interface)
   Client_server_pass = 'NadokaPassWord'
   Client_server_acl  = nil

@@ -11,10 +11,17 @@
 # the same terms of the Ruby's license.
 #
 #
-# $Id: nadoka.rb 197 2009-07-27 10:46:02Z znz $
+# $Id: nadoka.rb 206 2009-08-21 06:50:20Z znz $
 # Create : K.S. 03/07/10 20:29:07
 #
 
+unless "".respond_to?(:force_encoding)
+  class String
+    def force_encoding(enc)
+      self
+    end
+  end
+end
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
 require 'ndk/version'

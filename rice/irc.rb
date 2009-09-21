@@ -1,3 +1,4 @@
+# coding: ASCII-8BIT
 =begin
 
 = rice - Ruby Irc interfaCE
@@ -12,7 +13,7 @@ Original Credit:
 == Modified
 
   Modified by K.Sasada.
-  $Id: irc.rb 195 2009-07-01 09:04:56Z znz $
+  $Id: irc.rb 204 2009-08-20 16:45:18Z znz $
   
 =end
 

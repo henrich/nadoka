@@ -30,7 +30,7 @@ module Nadoka
     Setting_name = nil
     
     # client server
-    Client_server_port = 6667
+    Client_server_port = 6667 # or nil (no listen)
     Client_server_host = nil
     Client_server_pass = 'NadokaPassWord' # or nil
     Client_server_acl  = nil
@@ -417,7 +417,7 @@ module Nadoka
 
     def identical_channel_name ch
       # use 4 gsub() because of the compatibility of RFC2813(3.2)
-      ch.toeuc.downcase.tr('[]\\~', '{}|^').tojis
+      ch.toeuc.downcase.tr('[]\\~', '{}|^').tojis.force_encoding('ASCII-8BIT')
     end
 
     RName = {        # ('&','#','+','!')

@@ -1,3 +1,9 @@
+nadoka (0.7.2-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Taku YASUI <tach@debian.org>  Mon, 21 Sep 2009 13:31:16 +0900
+
 nadoka (0.7.1-1) unstable; urgency=low
 
   * New upstream release

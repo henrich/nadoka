@@ -1,13 +1,14 @@
 # -*-ruby-*-
 #
 # Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
+# Copyright (c) 2009 Kazuhiro NISHIYAMA
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's license.
 #
 #
-# $Id: googlebot.nb 196 2009-07-03 15:24:43Z znz $
+# $Id: googlebot.nb 213 2009-09-17 02:38:04Z znz $
 #
 
 =begin
@@ -22,7 +23,7 @@
 
   googlec> k1 k2 k3 k4 k5(max 5 words)
     -> search and show each hit count
-   
+
   googlec> k1 k2 k3 k4 k5(max 5 words)
     -> search and show each hit count with default count language
 
@@ -36,10 +37,12 @@ BotConfig = [
 {
   :name                => :GoogleBot,
   :ch                  => /.*/,
-  :key                 => nil,
-  :key_path            => '~/.google_key',
+  :referer             => 'http://rubyforge.org/projects/nadoka/',
+  # Register URL at http://code.google.com/intl/ja/apis/ajaxsearch/signup.html
+  # and set your URL to :referer and your API key to :api_key if you want.
+  :api_key             => nil,
   :googlec_maxwords    => 5,
-  :search_default_lang => 'lang_ja',
+  :search_default_lang => 'ja',
   :count_default_lang  => '',
 },
 ]
@@ -47,24 +50,24 @@ BotConfig = [
 =end
 
 
-require 'soap/wsdlDriver'
 require 'iconv'
 require 'kconv'
 require 'shellwords'
 require 'cgi'
+require 'open-uri'
+require 'json'
 
 class GoogleBot < Nadoka::NDK_Bot
   def bot_initialize
     @available_channel   = @bot_config[:ch] || /.*/
-    @google_key          = google_key
-    @search_default_lang = @bot_config[:search_default_lang] || 'lang_ja'
-    @googlec_maxwords    = @bot_config[:googlec_maxwords]    || 5
-    @count_default_lang  = @bot_config[:count_default_lang]  || ''
-    google_wsdl = 'http://api.google.com/GoogleSearch.wsdl'
-    @google = SOAP::WSDLDriverFactory.new(google_wsdl).create_driver
-    @google.generate_explicit_type = true
+    @search_default_lang = (@bot_config[:search_default_lang] || 'ja').sub(/^lang_/, '')
+    @googlec_maxwords    = @bot_config[:googlec_maxwords] || 5
+    @count_default_lang  = (@bot_config[:count_default_lang] || '').sub(/^lang_/, '')
+    @referer = @bot_config[:referer] || 'http://rubyforge.org/projects/nadoka/'
+    @api_key = @bot_config[:api_key]
+    @uri_slog = @bot_config.fetch(:uri_slog, false)
   end
-  
+
   def on_privmsg prefix, ch, msg
     if @available_channel === ch
       if response = dispatch_command(msg)
@@ -73,68 +76,90 @@ class GoogleBot < Nadoka::NDK_Bot
     end
   end
 
+  SEARCHER = %w!web local video blogs news books images patent!.freeze
+  SEARCHER_RE = Regexp.new("(?:" + SEARCHER.join('|') + ")").freeze
+
   def dispatch_command msg
+    searcher = nil
     begin
       case msg
-      when /^goo(o*)gle(:.*)?>\s*(.+)/, /^gu(u*)guru(:.+)?>\s*(.+)/
-        "goo#{$1}gle bot#{$2}: #{search($1.length, $2, $3)}"
-        
-      when /^googlec(:.*)?>\s*(.+)/
-        "googlec bot: #{googlec($1, $2)}"
+      when /^goo(o*)gle( #{SEARCHER_RE})?(:.*)?>\s*(.+)/o, /^gu(u*)guru(#{SEARCHER_RE})?(:.+)?>\s*(.+)/o
+        "goo#{$1}gle#{$2} bot#{$3}: #{search($1.length, $3, $4, $2)}"
+      when /^googlec( #{SEARCHER_RE})?(:.*)?>\s*(.+)/o
+        "googlec#{$1} bot#{$2}: #{googlec($1, $3, $2)}"
       end
     rescue Exception => e
       "google bot: #{e.class}(#{e.message} @ #{e.backtrace[0]})"
     end
   end
- 
-  def do_search word, cnt, lang
+
+  def do_search word, cnt, lang, searcher='web'
     i = 0
     begin
-      @google.doGoogleSearch(
-        @google_key, word, cnt, 1, false, "", false, lang, '', '')
+      uri = "http://ajax.googleapis.com/ajax/services/search/"
+      uri << searcher
+      uri << "?v=1.0&q="
+      uri << CGI.escape(word)
+      if @api_key
+        uri << "&key=#{CGI.escape(@api_key)}"
+      end
+      cnt = cnt.to_i
+      if cnt > 0
+        uri << "&start=#{cnt.to_i}"
+      end
+      if lang
+        uri << "&hl=#{CGI.escape(lang)}"
+        if searcher == 'web'
+          uri << "&lr=lang_#{CGI.escape(lang)}"
+        end
+      end
+      @logger.slog "GoogleBot: #{uri}" if @uri_slog
+      result = open(uri, "Referer" => @referer) do |f|
+        JSON.parse(f.read)
+      end
+      def result.estimatedTotalResultsCount
+        self["responseData"]["cursor"]["estimatedResultCount"]
+      end
+      result
     rescue Exception => e
       retry if (i+=1) < 5
       raise
     end
   end
- 
-  def search cnt, lang, word
+
+  def search cnt, lang, word, searcher=nil
     lang = lang_check(lang)
+    searcher = searcher_check(searcher)
     word = search_char_code(word)
-    
-    result = do_search word, cnt, lang
+
+    result = do_search word, cnt, lang, searcher
 
     count = result.estimatedTotalResultsCount.to_i
+
     if count > 0
       count = count.to_s.gsub(/(\d)(?=\d{3}+$)/, '\\1,')
-      url   =  title = ''
-    
-      result.resultElements.each_with_index{|e, i|
-        url   = e['URL']
-        title = show_char_code_and_erace_tag(e.title)
-      }
+      url = title = ''
+
+      e = result["responseData"]["results"][0]
+      url   = e['unescapedUrl'] || e['url'] || e['postUrl']
+      title = show_char_code_and_erace_tag(e['titleNoFormatting'])
       "#{title} - #{url} (and #{count} hit#{(count.to_i > 1) ? 's' : ''})"
     else
       "no match"
     end
   end
 
-  def googlec lang, word
+  def googlec lang, word, searcher=nil
     lang = lang_check(lang, @count_default_lang)
+    searcher = searcher_check(searcher)
     words = Shellwords.shellwords(word).map{|e| "\"#{e}\""}
     return 'too many options' if words.size > @googlec_maxwords
 
     words.map{|rw|
       w = search_char_code(rw)
-      result = do_search "'#{w}'", 0, lang
+      result = do_search "'#{w}'", 0, lang, searcher
       "#{rw}(#{result.estimatedTotalResultsCount.to_s.gsub(/(\d)(?=\d{3}+$)/, '\\1,')})"
     }.join(', ')
-  end
-  
-  def google_key
-    @bot_config[:key] ||
-    File.open(File.expand_path(@bot_config[:key_path] ||
-                               "~/.google_key")).read.chomp
   end
 
   def erace_tag str
@@ -146,14 +171,29 @@ class GoogleBot < Nadoka::NDK_Bot
       @search_default_lang
     else
       lang = lang[1..-1]
-      if lang.empty? || /^lang_/ =~ lang
-        lang
+      if lang.empty?
+        nil
+      elsif /^lang_/ =~ lang
+        lang.sub(/^lang_/, '')
       else
-        'lang_' + lang
+        lang
       end
     end
   end
-  
+
+  def searcher_check searcher
+    if !searcher
+      'web'
+    else
+      searcher = searcher[1..-1]
+      if SEARCHER.include?(searcher)
+        searcher
+      else
+        'web'
+      end
+    end
+  end
+
   def show_char_code_and_erace_tag str
     return CGI.unescapeHTML(erace_tag(str.toeuc)).tojis
 
@@ -171,7 +211,7 @@ class GoogleBot < Nadoka::NDK_Bot
       str
     end
   end
- 
+
   def search_char_code str
     case $KCODE
     when 'EUC', 'SJIS'
@@ -189,4 +229,3 @@ class GoogleBot < Nadoka::NDK_Bot
     end
   end
 end
-
