@@ -1,14 +1,14 @@
 # -*-ruby-*-
 #
 # Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
-# Copyright (c) 2009 Kazuhiro NISHIYAMA
+# Copyright (c) 2009, 2010 Kazuhiro NISHIYAMA
 #
 # This program is free software with ABSOLUTELY NO WARRANTY.
 # You can re-distribute and/or modify this program under
 # the same terms of the Ruby's license.
 #
 #
-# $Id: googlebot.nb 213 2009-09-17 02:38:04Z znz $
+# $Id: googlebot.nb 237 2010-09-28 09:57:31Z znz $
 #
 
 =begin
@@ -55,7 +55,12 @@ require 'kconv'
 require 'shellwords'
 require 'cgi'
 require 'open-uri'
-require 'json'
+begin
+  require 'json'
+rescue LoadError
+  require 'rubygems'
+  require 'json'
+end
 
 class GoogleBot < Nadoka::NDK_Bot
   def bot_initialize
@@ -76,20 +81,31 @@ class GoogleBot < Nadoka::NDK_Bot
     end
   end
 
-  SEARCHER = %w!web local video blogs news books images patent!.freeze
+  SEARCHER = %w!web calc code local video blogs news books images ime imed patent!.freeze
   SEARCHER_RE = Regexp.new("(?:" + SEARCHER.join('|') + ")").freeze
 
+  def search_searcher key 
+    SEARCHER.each{|searcher|
+      if /\A#{key}/ =~ searcher
+        return searcher
+      end
+    }; nil
+  end
+
   def dispatch_command msg
-    searcher = nil
     begin
       case msg
-      when /^goo(o*)gle( #{SEARCHER_RE})?(:.*)?>\s*(.+)/o, /^gu(u*)guru(#{SEARCHER_RE})?(:.+)?>\s*(.+)/o
+      when /^goo(o*)gle( #{SEARCHER_RE})?(:.*?)?>\s*(.+)/o, /^gu(u*)guru(#{SEARCHER_RE})?(:.+)?>\s*(.+)/o
         "goo#{$1}gle#{$2} bot#{$3}: #{search($1.length, $3, $4, $2)}"
-      when /^googlec( #{SEARCHER_RE})?(:.*)?>\s*(.+)/o
+      when /^googlec( #{SEARCHER_RE})?(:.*?)?>\s*(.+)/o
         "googlec#{$1} bot#{$2}: #{googlec($1, $3, $2)}"
+      when /^g(\w+)?(:.*?)?>\s*(.+)/
+        searcher = $1 ? search_searcher($1) : 'web'
+        "google #{searcher} bot#{$2}: #{search(0, $2, $3, searcher)}" if searcher
       end
     rescue Exception => e
-      "google bot: #{e.class}(#{e.message} @ #{e.backtrace[0]})"
+      @manager.ndk_error e
+      "google bot: #{e.class} (#{e.message} @ #{e.backtrace[0]})"
     end
   end
 
@@ -114,6 +130,7 @@ class GoogleBot < Nadoka::NDK_Bot
         end
       end
       @logger.slog "GoogleBot: #{uri}" if @uri_slog
+
       result = open(uri, "Referer" => @referer) do |f|
         JSON.parse(f.read)
       end
@@ -127,11 +144,7 @@ class GoogleBot < Nadoka::NDK_Bot
     end
   end
 
-  def search cnt, lang, word, searcher=nil
-    lang = lang_check(lang)
-    searcher = searcher_check(searcher)
-    word = search_char_code(word)
-
+  def api_search word, cnt, lang, searcher
     result = do_search word, cnt, lang, searcher
 
     count = result.estimatedTotalResultsCount.to_i
@@ -142,12 +155,104 @@ class GoogleBot < Nadoka::NDK_Bot
 
       e = result["responseData"]["results"][0]
       url   = e['unescapedUrl'] || e['url'] || e['postUrl']
-      title = show_char_code_and_erace_tag(e['titleNoFormatting'])
+      title = show_char_code_and_erase_tag(e['titleNoFormatting'])
       "#{title} - #{url} (and #{count} hit#{(count.to_i > 1) ? 's' : ''})"
     else
       "no match"
     end
   end
+
+  def google_calc exp
+    @logger.slog("google_calc<#{exp.dump}")
+    uri = "http://www.google.co.jp/search?ie=UTF8&oe=UTF-8&q=#{CGI.escape(exp)}"
+    html = open(uri) do |f|
+      f.read
+    end
+    if /class=r [^<>]+><b>(.+?)<\/b>/u =~ html
+      result = $1
+      # @logger.slog("google_calc>#{result.dump}")
+      result.gsub!(/<sup>(.+?)<\/sup>/u) { "^(#{$1})" }
+      result.gsub!(/<.+?>/u, '')
+      result.gsub!(/&\#215;/u, "\303\227")
+      NKF.nkf('-j', result)
+    elsif /<p class=g>.*?<a href="(.+?)">(.+?)<\/a>/u =~ html
+      href, text = $1, $2
+      # @logger.slog("google_calc fallback>#{href.dump} #{text.dump}")
+      NKF.nkf('-j', "(normal search result only)")
+      #text.gsub!(/<.+?>/u, '')
+      #NKF.nkf('-j', "(fallback) normal search result: #{text} #{href}")
+    else
+      "response error"
+    end
+  rescue Exception
+    $!.to_s
+  end
+
+  def google_code key
+    url = URI.encode("http://www.google.com/codesearch?q=#{key}")
+    data = open(url){|f|
+      f.read
+    }
+    if /of (?:about )?<b>([\d,]+)<\/b>/m =~ data
+      "#{url} - #{$1} matches."
+    else
+      "did not match any documents."
+    end
+  end
+
+  if defined?(URI.encode_www_form)
+    def encode_www_form(enum)
+      URI.encode_www_form(enum)
+    end
+  else
+    def encode_www_form(enum)
+      enum.map do |k, v|
+        "#{URI.encode(k)}=#{URI.encode(v)}"
+      end.join('&')
+    end
+  end
+
+  # see http://www.google.com/intl/ja/ime/cgiapi.html
+  def google_ime text, d=false
+    url = 'http://www.google.com/transliterate?'
+    url << encode_www_form('langpair' => 'ja-Hira|ja', 'text' => text)
+    data = open(url){|f|
+      # TODO: gsub fix invalid JSON, should remove after fix response
+      # see http://www.google.com/support/forum/p/ime/thread?tid=06501c8b7a16add3&hl=ja
+      JSON.parse(f.read.gsub(/,(?=\n\])/,''))
+    }
+    if d
+      result = data.map do |org, candidates|
+        "#{org}=#{candidates.join('/')}"
+      end.join(' ')
+    else
+      result = data.map do |org, candidates|
+        candidates[0]
+      end.join('')
+    end
+    show_char_code_and_erase_tag(result)
+  rescue Exception
+    $!.to_s[/.+/] # first line
+  end
+
+  def search cnt, lang, word, searcher=nil
+    lang = lang_check(lang)
+    searcher = searcher_check(searcher)
+    word = search_char_code(word)
+
+    case searcher
+    when 'code'
+      google_code word
+    when 'calc'
+      google_calc word
+    when 'ime'
+      google_ime word
+    when 'imed'
+      google_ime word, true
+    else
+      api_search word, cnt, lang, searcher
+    end
+ end
 
   def googlec lang, word, searcher=nil
     lang = lang_check(lang, @count_default_lang)
@@ -162,7 +267,7 @@ class GoogleBot < Nadoka::NDK_Bot
     }.join(', ')
   end
 
-  def erace_tag str
+  def erase_tag str
     CGI.unescapeHTML(str.gsub(/\<.+?\>/, ''))
   end
 
@@ -185,7 +290,7 @@ class GoogleBot < Nadoka::NDK_Bot
     if !searcher
       'web'
     else
-      searcher = searcher[1..-1]
+      searcher = searcher.strip
       if SEARCHER.include?(searcher)
         searcher
       else
@@ -194,8 +299,8 @@ class GoogleBot < Nadoka::NDK_Bot
     end
   end
 
-  def show_char_code_and_erace_tag str
-    return CGI.unescapeHTML(erace_tag(str.toeuc)).tojis
+  def show_char_code_and_erase_tag str
+    return CGI.unescapeHTML(erase_tag(str.toeuc)).tojis
 
     case $KCODE
     when 'EUC', 'SJIS'

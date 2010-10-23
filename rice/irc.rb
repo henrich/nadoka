@@ -1,4 +1,3 @@
-# coding: ASCII-8BIT
 =begin
 
 = rice - Ruby Irc interfaCE
@@ -13,7 +12,7 @@ Original Credit:
 == Modified
 
   Modified by K.Sasada.
-  $Id: irc.rb 204 2009-08-20 16:45:18Z znz $
+  $Id: irc.rb 230 2010-08-18 07:01:51Z znz $
   
 =end
 
@@ -421,9 +420,20 @@ module RICE
 
       # ip4addr    =  1*3digit "." 1*3digit "." 1*3digit "." 1*3digit
       IP4ADDR = "[#{DIGIT}]{1,3}(?:\\.[#{DIGIT}]{1,3}){3}"
-      # ip6addr    =  1*hexdigit 7( ":" 1*hexdigit )
-      # ip6addr    =/ "0:0:0:0:0:" ( "0" / "FFFF" ) ":" ip4addr
-      IP6ADDR = "(?:[#{HEXDIGIT}]+(?::[#{HEXDIGIT}]+){7}|0:0:0:0:0:(?:0|FFFF):#{IP4ADDR})"
+
+      H16  = "[#{HEXDIGIT}]{1,4}" # :nodoc:
+      LS32 = "(?:#{H16}:#{H16})|#{IP4ADDR}" # :nodoc:
+      # ip6addr from RFC3986
+      IP6ADDR = "(?:#{H16}:){6}#{LS32}|" \
+                "::(?:#{H16}:){5}#{LS32}|" \
+                "(?:#{H16})?::(?:#{H16}:){4}#{LS32}|" \
+                "(?:(?:#{H16}:)?#{H16})?::(?:#{H16}:){3}#{LS32}|" \
+                "(?:(?:#{H16}:){0,2}#{H16})?::(?:#{H16}:){2}#{LS32}|" \
+                "(?:(?:#{H16}:){0,3}#{H16})?::#{H16}:#{LS32}|" \
+                "(?:(?:#{H16}:){0,4}#{H16})?::#{LS32}|" \
+                "(?:(?:#{H16}:){0,5}#{H16})?::#{H16}|" \
+                "(?:(?:#{H16}:){0,6}#{H16})?::"
+
       # hostaddr   =  ip4addr / ip6addr
       HOSTADDR = "(?:#{IP4ADDR}|#{IP6ADDR})"
 
@@ -549,10 +559,10 @@ module RICE
           str << ' '
           if (param == @params[-1]) && (param.size == 0 || /(^:)|(\s)/ =~ param)
             str << ':'
-            str << param
+            str << param.to_s
             f = true
           else
-            str << param
+            str << param.to_s
           end
         end
       end

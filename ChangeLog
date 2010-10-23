@@ -1,5 +1,95 @@
-# ChangeLog of Nadoka($Rev: 210 $)
-# $Id: ChangeLog 210 2009-09-16 19:27:37Z znz $ 
+# ChangeLog of Nadoka($Rev: 236 $)
+# $Id: ChangeLog 236 2010-09-28 09:57:22Z znz $ 
+
+2010-09-28  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/googlebot.nb: add gime and gimed.
+
+	* plugins/googlebot.nb: use shortest match.
+
+2010-09-13  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/dictbot.nb: use shortest match.
+
+2010-09-06  NARUSE, Yui  <naruse@ruby-lang.org>
+
+	* plugins/twitterbot.nb: added.
+
+	* plugins/xibot.nb: added.
+
+	* plugins/backlogbot.nb: send message which matches pattern.
+
+2010-08-18  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* rice/irc.rb: applied nurse's patch.
+	  Update regexp of IPv6 address based on RFC3986.
+
+2010-07-21  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* nadokarc: update IPv6 Sample in Servers.
+	  see http://www.ircnet.ne.jp/
+
+2010-02-15  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/rss_checkbot.nb (RSS_CheckBot#send_notice): all
+	  #send_notice should support Array in @ch.
+
+	* rice/irc.rb (RICE::Message#to_s): add recursive #to_s to avoid
+	  "can't convert Array into String (TypeError)" in `<<'.
+
+2010-01-28  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* ndk/server.rb (Nadoka::NDK_Server#set_signal_trap): merge patch
+	  from n0kada. http://www.atdot.net/sp/view/dswxwk
+
+2010-01-25  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* nadokarc: update Servers.
+	  see http://www.wide.ad.jp/news/press/20100125-IRC-server-close-j.html
+	  and http://www.ircnet.ne.jp/ .
+
+2010-01-01  Koichi Sasada <ko1@atdot.net>
+
+	* plugins/googlebot.nb: support new searcher calc and code.
+
+	* plugins/googlebot.nb: support abbreviated syntax (ex: g> ).
+
+2009-11-30  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* nadokarc: update Servers.
+	  see http://twitter.com/ircnet_fujisawa/status/6185537849 for irc6.fujisawa.wide.ad.jp,
+	  and http://en.wikipedia.org/wiki/IRCd says most often used port for SSL is 6697.
+
+2009-11-08  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* nadokarc: update Servers.
+	  see http://slashdot.jp/it/article.pl?sid=09/11/06/0747210
+
+2009-10-23  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/googlebot.nb: fallback to json gem.
+
+2009-09-22  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* ndk/server.rb (Nadoka::NDK_Server#server_main_proc): support
+	RPL_ISUPPORT.
+
+2009-09-22  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* ndk/error.rb: add Nadoka::NDK_InvalidMessage.
+
+	* ndk/server.rb (Nadoka::NDK_Server#send_to_server): check [\r\n].
+
+2009-09-21  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* rice/irc.rb: remove magic comment. ruby 1.9.2 works without it.
+
+
+2009-09-21  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* 0.7.2: released
+
+	* ndk/version.rb: bumped version to 0.7.5.
 
 2009-09-17  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
 

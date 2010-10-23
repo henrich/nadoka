@@ -1,7 +1,7 @@
 ## -*-ruby-*- vim: set filetype=ruby :
 ##
 ## Nadoka Sample resource file
-## $Id: nadokarc 203 2009-08-17 08:17:29Z znz $
+## $Id: nadokarc 229 2010-07-21 11:56:42Z znz $
 #
 # Copyright (c) 2004-2005 SASADA Koichi <ko1 at atdot.net>
 #
@@ -53,39 +53,39 @@ class NADOKA_Config < Nadoka::NDK_ConfigBase
   ###############################################
   # server setting
 
-  # IRCnet servers from
-  #   http://irc.kyoto-u.ac.jp/list-of-servers.html
+  # IRCnet servers in Japan
   Servers = [
-    { :host => 'irc.fujisawa.wide.ad.jp',
-      :port => (6660 .. 6669),             # default: 6667
+    { :host => 'irc.ircnet.ne.jp',
+      :port => 6667,                       # default: 6667
       :pass => nil,                        # default: nil
     },
-    { :host => 'irc.tokyo.wide.ad.jp',
-      :port => (6660 .. 6669),
-    },
     { :host => 'irc.media.kyoto-u.ac.jp',
-      :port => (6660 .. 6669),
-    },
-    { :host => 'irc.nara.wide.ad.jp',
       :port => (6660 .. 6669),
     },
     { :host => 'irc.huie.hokudai.ac.jp',
       # without :port, use 6667 as default port
     },
-
     # IPv6 Sample
-    # { :host => 'irc6.nara.wide.ad.jp',
-    #   :port => 6667
-    # }
+    # {
+    #   :host => 'irc6.ircnet.ne.jp',
+    #   :port => 6667,
+    # },
+    # {
+    #   :host => 'irc6.livedoor.ne.jp',
+    #   :port => (6660 .. 6669),
+    # },
+  ]
+
+  #Servers = [
     # SSL Sample
     # {
     #   :host => 'ircs.example.net',
-    #   :port => 994,
+    #   :port => 6697,
     #   :ssl_params => { # with :ssl_params hash, use ssl
     #     # :ca_cert => "/etc/ssl/certs", # default: openssl's default certificates
     #  },
-    # }
-  ]
+    # },
+  #]
 
 
   ###############################################

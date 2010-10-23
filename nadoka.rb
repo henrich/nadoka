@@ -11,7 +11,7 @@
 # the same terms of the Ruby's license.
 #
 #
-# $Id: nadoka.rb 206 2009-08-21 06:50:20Z znz $
+# $Id: nadoka.rb 226 2010-01-30 00:24:09Z znz $
 # Create : K.S. 03/07/10 20:29:07
 #
 
@@ -108,6 +108,8 @@ begin
 rescue Nadoka::NDK_QuitProgram
   #
 rescue Nadoka::NDK_RestartProgram
+  GC.start
+  ObjectSpace.each_object(Socket) {|sock| sock.close}
   retry
 rescue Exception => e
   open('nadoka_fatal_error', 'w'){|f|

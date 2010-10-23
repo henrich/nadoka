@@ -46,10 +46,13 @@ module Nadoka
       @pong_recieved   = true
       @pong_fail_count = 0
 
+      @isupport = {}
+
       set_signal_trap
     end
     attr_reader :state, :connected, :rc
-    
+    attr_reader :isupport
+
     def client_count
       @clients.size
     end
@@ -166,7 +169,7 @@ module Nadoka
           @state.nick = nick
           send_to_server Cmd.nick(nick)
         when 'NOTICE'
-          # igonore
+          # ignore
         when 'ERROR'
           msg = "Server login fail!(#{q})"
           @server_thread.raise NDK_ReconnectToServer
@@ -197,6 +200,7 @@ module Nadoka
       end
 
       @connected = true
+      @isupport = {}
 
       ##
       if @clients.size == 0
@@ -245,7 +249,22 @@ module Nadoka
           nick = @state.nick_succ(q.params[1])
           send_to_server Cmd.nick(nick)
           @logger.slog("Retry nick setting: #{nick}")
-          
+
+        when '005' # RPL_ISUPPORT or RPL_BOUNCE
+          if /supported/i =~ q.params[-1]
+            q.params[1..-2].each do |param|
+              if /\A(-)?([A-Z0-9]+)(?:=(.*))?\z/ =~ param
+                negate, key, value = $~.captures
+                if negate
+                  @isupport.delete(key)
+                else
+                  @isupport[key] = value || true
+                end
+              end
+            end
+          end
+          @logger.dlog "isupport: #{@isupport.inspect}"
+
         else
           # 
         end
@@ -404,8 +423,14 @@ module Nadoka
     end
     
     def send_to_server msg
-      @logger.dlog "[>S] #{msg}"
-      @server << msg
+      str = msg.to_s
+      if /[\r\n]/ =~ str.chomp
+        @logger.dlog "![>S] #{str}"
+        raise NDK_InvalidMessage, "Message must not include [\\r\\n]: #{str.inspect}"
+      else
+        @logger.dlog "[>S] #{str}"
+        @server << msg
+      end
     end
     
     def recv_from_server
@@ -525,11 +550,11 @@ module Nadoka
     end
 
     def set_signal_trap
-      list = Signal.list.keys
+      list = Signal.list
       Signal.trap(:INT){
         # invoke_event :quit_program
         Thread.main.raise NDK_QuitProgram
-      } if list.any?{|e| e == 'INT'}
+      } if list['INT']
       Signal.trap(:TERM){
         # invoke_event :quit_program
         Thread.main.raise NDK_QuitProgram
@@ -538,15 +563,15 @@ module Nadoka
       Signal.trap(:HUP){
         # reload config
         invoke_event :reload_config
-      } if list.any?{|e| e == 'HUP'}
+      } if list['HUP']
       trap(:USR1){
         # SIGUSR1
         invoke_event :invoke_bot, :sigusr1
-      } if list.any?{|e| e == 'USR1' }
+      } if list['USR1']
       trap(:USR2){
         # SIGUSR2
         invoke_event :invoke_bot, :sigusr2
-      } if list.any?{|e| e == 'USR2' }
+      } if list['USR2']
     end
     
     def about_me? msg
