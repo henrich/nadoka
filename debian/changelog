@@ -1,6 +1,7 @@
-nadoka (0.7.6-1) UNRELEASED; urgency=low
+nadoka (0.7.6-1) unstable; urgency=low
 
   * New upstream release
+  * Bump Standards-Version to 3.9.3
 
  -- Taku YASUI <tach@debian.org>  Mon, 26 Mar 2012 00:43:52 +0900
 
