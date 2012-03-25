@@ -7,7 +7,7 @@
 # the same terms of the Ruby's license.
 #
 #
-# $Id: backlogbot.nb 233 2010-09-06 09:02:49Z naruse $
+# $Id: backlogbot.nb 240 2010-09-29 14:19:09Z znz $
 #
 
 =begin

@@ -1,5 +1,70 @@
-# ChangeLog of Nadoka($Rev: 236 $)
-# $Id: ChangeLog 236 2010-09-28 09:57:22Z znz $ 
+# ChangeLog of Nadoka($Rev: 256 $)
+# $Id: ChangeLog 256 2011-09-28 13:15:00Z znz $ 
+
+2011-09-28  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/translatebot.nb: merge patch from ko1_ndk.
+	support Bing Translator.
+
+2011-09-15  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/opensearchbot.nb: split class and enabled to run on
+	command line for tests.
+
+2011-08-16  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/googlebot.nb: bot return uri only, because cannot fetch
+	results from Google code search.
+
+2011-08-15  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/opensearchbot.nb: add new bot.
+
+2011-06-02  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* rice/irc.rb (RICE::Message::PATTERN::NICKNAME): nickname starts
+	  with DIGIT may occur in split mode.
+
+2010-12-14  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/tenkibot.nb: use same_bot? and clean up trailing spaces.
+
+2010-12-14  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/tenkibot.nb (TenkiBot#tenki): cut after "...".
+	(TenkiBot#bot_initialize): use bot_init_utils.
+
+2010-12-14  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* ndk/bot.rb (Nadoka::NDK_Bot#bot_init_utils): add new methods.
+
+	* plugins/googlebot.nb (GoogleBot#bot_initialize): use bot_init_utils.
+
+2010-10-21  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/googlebot.nb: add ch_kcode. merge patch from ko1_ndk.
+
+2010-10-21  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* ndk/server.rb (Nadoka::NDK_Server#server_main_proc): do not use
+	  nick_succ when channel and retry join.
+
+2010-10-21  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* plugins/translatebot.nb: added (contributed from SASADA Koichi)
+
+2010-09-29  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* nadokarc, plugins/autoawaybot.nb, plugins/autodumpbot.nb,
+	  plugins/backlogbot.nb, plugins/dictbot.nb, plugins/modemanager.nb,
+	  plugins/pastebot.nb, plugins/roulettebot.nb,
+	  plugins/timestampbot.nb, plugins/xibot.nb, rice/irc.rb: CRLF -> LF.
+
+2010-09-29  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
+
+	* 0.7.5: released
+
+	* ndk/version.rb: 0.7.6
 
 2010-09-28  Kazuhiro NISHIYAMA  <zn@mbf.nifty.com>
 

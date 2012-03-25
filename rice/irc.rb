@@ -12,7 +12,7 @@ Original Credit:
 == Modified
 
   Modified by K.Sasada.
-  $Id: irc.rb 230 2010-08-18 07:01:51Z znz $
+  $Id: irc.rb 250 2011-06-01 22:51:17Z znz $
   
 =end
 
@@ -412,7 +412,8 @@ module RICE
       SERVERNAME = HOSTNAME
 
       # nickname   =  ( letter / special ) *8( letter / digit / special / "-" )
-      NICKNAME = "[#{LETTER}#{SPECIAL}][\-#{LETTER}#{DIGIT}#{SPECIAL}]*"
+      # (nickname starts with DIGIT may occur in split mode)
+      NICKNAME = "[#{LETTER}#{DIGIT}#{SPECIAL}][\-#{LETTER}#{DIGIT}#{SPECIAL}]*"
 
       # user       =  1*( %x01-09 / %x0B-0C / %x0E-1F / %x21-3F / %x41-FF )
       #                 ; any octet except NUL, CR, LF, " " and "@"
