@@ -5,6 +5,8 @@ Maintainer: Taku YASUI <tach@debian.org>
 Build-Depends: cdbs, debhelper (>= 5.0.0)
 Homepage: http://www.atdot.net/nadoka/
 Standards-Version: 3.9.3
+Vcs-Svn: svn://svn.debian.org/svn/collab-maint/deb-maint/nadoka
+Vcs-Browser: http://anonscm.debian.org/viewvc/collab-maint/deb-maint/nadoka
 
 Package: nadoka
 Architecture: all
